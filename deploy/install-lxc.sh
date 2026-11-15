@@ -70,7 +70,7 @@ done
 say "Installation de Docker dans le conteneur (une à deux minutes)…"
 pct exec "$CTID" -- bash -c '
   set -e
-  export DEBIAN_FRONTEND=noninteractive
+  export DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8
   apt-get update -qq
   apt-get install -y -qq curl ca-certificates git >/dev/null
   curl -fsSL https://get.docker.com | sh >/dev/null
