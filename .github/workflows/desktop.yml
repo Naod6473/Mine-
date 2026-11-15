@@ -43,10 +43,6 @@ jobs:
         working-directory: ui
       - run: npm ci
         working-directory: desktop
-      - name: Tests Rust
-        if: matrix.name == 'linux'
-        run: cargo test
-        working-directory: desktop/src-tauri
       - uses: tauri-apps/tauri-action@v0
         id: tauri
         env:
@@ -60,6 +56,10 @@ jobs:
             Installeurs de Mine!? pour Windows (.exe), macOS (.dmg) et Linux (.AppImage, .deb).
             Au premier lancement, l'app télécharge yt-dlp, ffmpeg et deno (une seule fois).
           releaseDraft: true
+      - name: Tests Rust (après la construction de l'interface)
+        if: matrix.name == 'linux'
+        run: cargo test
+        working-directory: desktop/src-tauri
       - uses: actions/upload-artifact@v4
         with:
           name: mine-${{ matrix.name }}
