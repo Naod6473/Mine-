@@ -83,7 +83,7 @@ class AppState {
       if (d.status === 'finished') {
         this.celebrate = true;
         clearTimeout(this.celebrateTimer);
-        this.celebrateTimer = setTimeout(() => (this.celebrate = false), 2200);
+        this.celebrateTimer = setTimeout(() => (this.celebrate = false), 3800);
       }
     });
     s.on('canceled', (raw: string) => { delete this.queue[parse<string>(raw)]; });

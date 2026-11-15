@@ -13,12 +13,20 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0E1215; --surface: #141A1E; --ink: #ECF1F4; --muted: #7D8892; --line: #232A31;
     --wash: #131C22; --beak: #F5A52A; --sea: #63B2D4; --danger: #F07A64;
     color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+  --bg: #0E1215; --surface: #141A1E; --ink: #ECF1F4; --muted: #7D8892; --line: #232A31;
+  --wash: #131C22; --beak: #F5A52A; --sea: #63B2D4; --danger: #F07A64;
+  color-scheme: dark;
+}
+/* Fondu jour / nuit */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .6s; animation-timing-function: ease-in-out; }
+:root.theming, :root.theming * { transition: background-color .6s ease-in-out, color .6s ease-in-out, border-color .6s ease-in-out, fill .6s ease-in-out !important; }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {

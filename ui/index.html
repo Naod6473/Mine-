@@ -5,11 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Mine!?</title>
     <meta name="description" content="Coller un lien, appuyer sur Mine !, récupérer le fichier." />
-    <meta name="theme-color" content="#F7F9FA" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0E1215" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F7F9FA" />
+    <script>
+      // Thème choisi avant le premier affichage, pour éviter un flash.
+      try {
+        var t = localStorage.getItem('mine.theme');
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
     <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="preload" href="gull-fly.webp" as="image" />
+    <link rel="preload" href="logo-rest.webp" as="image" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>

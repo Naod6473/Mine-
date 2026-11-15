@@ -6,6 +6,7 @@
   import Sky from './components/Sky.svelte';
   import History from './components/History.svelte';
   import Splash from './components/Splash.svelte';
+  import { theme } from './lib/theme.svelte';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
 
@@ -42,6 +43,15 @@
       Mine{#if app.activeCount}<span class="badge">{app.activeCount}</span>{/if}
     </button>
     <button class:on={app.tab === 'history'} onclick={() => (app.tab = 'history')} aria-current={app.tab === 'history' ? 'page' : undefined}>Historique</button>
+    <button class="mode" onclick={() => theme.toggle()} aria-label={theme.current === 'dark' ? 'Passer en mode jour' : 'Passer en mode nuit'} title={theme.current === 'dark' ? 'Mode jour' : 'Mode nuit'}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class:night={theme.current === 'dark'}>
+        <mask id="moon"><rect width="24" height="24" fill="#fff" /><circle class="bite" cx="24" cy="4" r="7" fill="#000" /></mask>
+        <circle class="core" cx="12" cy="12" r="5" mask="url(#moon)" fill="currentColor" />
+        <g class="rays" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </g>
+      </svg>
+    </button>
   </nav>
 </header>
 
@@ -95,6 +105,15 @@
   nav button { position: relative; border: 0; background: none; color: var(--muted); font: 500 14px var(--body); padding: 6px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   nav button:hover, nav button.on { color: var(--ink); }
   nav button.on { font-weight: 600; }
+  .mode { width: 32px; height: 32px; justify-content: center; border-radius: 99px; margin-left: -6px; }
+  .mode:hover { background: var(--wash); }
+  .mode svg { overflow: visible; }
+  .mode .core { transition: r .5s var(--ease); }
+  .mode .bite { transition: cx .5s var(--ease), cy .5s var(--ease); }
+  .mode .rays { transform-origin: 12px 12px; transition: opacity .35s, transform .5s var(--ease); }
+  .mode .night .core { r: 8; }
+  .mode .night .bite { cx: 17; cy: 7; }
+  .mode .night .rays { opacity: 0; transform: rotate(-45deg) scale(.6); }
   .badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--beak); color: #14181C; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
   main { max-width: 640px; margin: 0 auto; padding: 0 20px 40px; }
   .hero { padding: clamp(8px, 4vh, 40px) 0 32px; }
