@@ -44,6 +44,11 @@ const fr = {
   sitesHeading: '{n} sites reconnus', sitesSearch: 'Chercher un site', sitesCount: '{n} résultat(s)',
   cookiesHint: 'Certains contenus demandent un fichier de cookies (Options → Cookies)',
   sitesNote: 'Liste fournie par yt-dlp, mise à jour chaque nuit. Un site peut changer et casser temporairement. Ne récupère que ce que tu as le droit de copier.',
+  tourLink: 'Visite guidée', skip: 'Passer', next: 'Suivant', done: 'À moi !', stepOf: '{n} / 4',
+  tour1: "Sérieusement, t'as besoin d'explications ? Bon. Là, tu colles ton lien. Puis tu appuies sur « À moi ! ». C'est tout. Je t'avais dit.",
+  tour2: "Juste le son ? Une autre qualité ? Seulement un bout ? Tout est caché dans Options. Moi je prends tout, mais chacun ses goûts.",
+  tour3: "Je ne pique pas que sur YouTube : plus de mille sites. La liste complète est par ici, si t'as la journée.",
+  tour4: "Et tout ce que t'as chipé reste là, dans ton navigateur, rien que pour toi. Allez, à toi. Enfin… à moi.",
   today: "Aujourd'hui, {n}", yesterday: 'Hier, {n}', left: 'reste {n}', back: 'Retour à Mine!?',
 };
 type Dict = typeof fr;
@@ -89,6 +94,11 @@ const en: Dict = {
   sitesHeading: '{n} supported sites', sitesSearch: 'Search a site', sitesCount: '{n} result(s)',
   cookiesHint: 'Some content needs a cookie file (Options → Cookies)',
   sitesNote: 'List provided by yt-dlp, updated every night. A site may change and break for a while. Only fetch what you have the right to copy.',
+  tourLink: 'Guided tour', skip: 'Skip', next: 'Next', done: 'Mine!', stepOf: '{n} / 4',
+  tour1: 'Seriously, you need instructions? Fine. Paste your link here. Then hit “Mine!”. That’s it. Told you.',
+  tour2: 'Just the sound? Another quality? Only a slice? It’s all hiding in Options. I take everything, but you do you.',
+  tour3: 'I don’t only steal from YouTube: over a thousand sites. The full list is down here, if you’ve got all day.',
+  tour4: 'And everything you grabbed stays here, in your browser, just for you. Off you go. I mean… mine.',
   today: 'Today, {n}', yesterday: 'Yesterday, {n}', left: '{n} left', back: 'Back to Mine!?',
 };
 

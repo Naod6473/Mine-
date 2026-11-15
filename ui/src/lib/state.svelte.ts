@@ -30,6 +30,8 @@ class AppState {
   presets = $state<Preset[]>(load(K.presets, []));
   tab = $state<Tab>(tabFromHash());
   submitting = $state(false);
+  /** Visite guidée : ouverte d'office à la première visite, puis depuis le bas de page. */
+  tour = $state(false);
   /** Cri de mouette à la fin d'un téléchargement lancé depuis ce navigateur. */
   sound = $state<boolean>(load('mine.sound.v1', true));
   private cry: HTMLAudioElement | null = null;

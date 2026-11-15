@@ -63,7 +63,7 @@
 
 <svelte:window ondragover={onDragOver} ondragleave={(e) => { if (!e.relatedTarget) dragging = false; }} ondrop={onDrop} onpaste={onPaste} />
 
-<form class="bar" class:dragging class:invalid={url.length > 0 && !valid} onsubmit={submit} autocomplete="off">
+<form class="bar" data-tour="bar" class:dragging class:invalid={url.length > 0 && !valid} onsubmit={submit} autocomplete="off">
   <input bind:this={input} bind:value={url} type="url" inputmode="url" spellcheck="false"
     aria-label={t('linkLabel')} enterkeyhint="go" />
   {#if url}
@@ -75,7 +75,7 @@
 </form>
 
 <div class="under">
-  <button class="textbtn" onclick={() => app.setMode(open ? 'simple' : 'advanced')} aria-expanded={open}>
+  <button class="textbtn" data-tour="options" onclick={() => app.setMode(open ? 'simple' : 'advanced')} aria-expanded={open}>
     {open ? t('hideOptions') : t('options')}
   </button>
   {#if !open && (app.options.download_type !== 'video' || app.options.folder || app.options.quality !== 'best')}

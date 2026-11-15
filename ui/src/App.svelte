@@ -9,6 +9,7 @@
   import Splash from './components/Splash.svelte';
   import Legal from './components/Legal.svelte';
   import Sites from './components/Sites.svelte';
+  import Tour from './components/Tour.svelte';
   import { theme } from './lib/theme.svelte';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
@@ -46,7 +47,7 @@
     <button class:on={app.tab === 'mine'} onclick={() => (app.go('mine'))} aria-current={app.tab === 'mine' ? 'page' : undefined}>
       {t('tabMine')}{#if app.activeCount}<span class="badge">{app.activeCount}</span>{/if}
     </button>
-    <button class:on={app.tab === 'history'} onclick={() => (app.go('history'))} aria-current={app.tab === 'history' ? 'page' : undefined}>{t('tabHistory')}</button>
+    <button data-tour="history" class:on={app.tab === 'history'} onclick={() => (app.go('history'))} aria-current={app.tab === 'history' ? 'page' : undefined}>{t('tabHistory')}</button>
     <button class="lang" onclick={() => i18n.toggle()} aria-label={t('switchLang')} title={t('switchLang')}>{t('langShort')}</button>
     <button class="mode" onclick={() => theme.toggle()} aria-label={theme.current === 'dark' ? t('toDay') : t('toNight')} title={theme.current === 'dark' ? t('day') : t('night')}>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class:night={theme.current === 'dark'}>
@@ -94,15 +95,19 @@
 </main>
 
 <footer class="foot">
-  <a href="#sites" onclick={(e) => { e.preventDefault(); app.go('sites'); }}>{t('sites')}</a>
+  <a href="#sites" data-tour="sites" onclick={(e) => { e.preventDefault(); app.go('sites'); }}>{t('sites')}</a>
   <span>·</span>
   <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>{t('terms')}</a>
   <span>·</span>
   <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>{t('privacy')}</a>
   <span>·</span>
+  <a href="#visite" onclick={(e) => { e.preventDefault(); app.go('mine'); app.tour = true; }}>{t('tourLink')}</a>
+  <span>·</span>
   <a href={SOURCE_URL} target="_blank" rel="noreferrer">{t('source')}</a>
   {#if version}<span>· {version}</span>{/if}
 </footer>
+
+<Tour />
 
 {#if app.toast}
   <div class="toast" data-kind={app.toast.kind} role={app.toast.kind === 'error' ? 'alert' : 'status'}>
