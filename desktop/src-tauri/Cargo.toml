@@ -1,0 +1,33 @@
+[package]
+name = "mine-desktop"
+version = "1.0.0"
+description = "Mine!? : colle un lien, la mouette récupère le fichier."
+license = "AGPL-3.0-or-later"
+edition = "2021"
+publish = false
+
+[lib]
+name = "mine_desktop"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["process", "io-util", "sync", "macros", "rt-multi-thread", "time", "fs"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-native-roots", "stream", "http2"] }
+futures-util = "0.3"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+tar = "0.4"
+xz2 = { version = "0.1", features = ["static"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

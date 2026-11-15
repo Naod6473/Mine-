@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../lib/i18n.svelte';
   import { app } from '../lib/state.svelte';
+  import { openFile, reveal } from '../lib/desktop';
   import { extOf, humanEta, humanSize, humanSpeed, label } from '../lib/labels';
   import type { Download } from '../lib/types';
 
@@ -47,7 +48,10 @@
       {#if active}
         <button class="textbtn" onclick={() => app.cancel(key)}>{t('cancel')}</button>
       {:else if d.status === 'finished'}
-        {#if href}<a class="textbtn strong" {href} download={d.filename ?? ''}>{t('fetch')}</a>{/if}
+        {#if app.desktop}
+          {#if d.filepath}<button class="textbtn strong" onclick={() => openFile(d.filepath!)}>{t('open')}</button>{/if}
+          <button class="textbtn" onclick={() => reveal(d.filepath)}>{t('reveal')}</button>
+        {:else if href}<a class="textbtn strong" {href} download={d.filename ?? ''}>{t('fetch')}</a>{/if}
         <button class="textbtn" onclick={() => app.dismiss(key, d)}>{t('dismiss')}</button>
       {:else if d.status === 'error'}
         <button class="textbtn strong" onclick={() => app.retry(key)}>{t('retry')}</button>

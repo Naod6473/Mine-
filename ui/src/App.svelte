@@ -11,6 +11,8 @@
   import Sites from './components/Sites.svelte';
   import Tour from './components/Tour.svelte';
   import { theme } from './lib/theme.svelte';
+  import ToolsSetup from './components/ToolsSetup.svelte';
+  import { externalLinks } from './lib/desktop';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
 
@@ -20,13 +22,15 @@
   const autostart = !!shared && params.get('go') === '1';
   if (shared) history.replaceState(null, '', location.pathname);
 
-  let version = $state('');
+  let serverVersion = $state('');
+  const version = $derived(app.desktop ? String(app.config?.VERSION ?? '') : serverVersion);
   const finishedCount = $derived(app.cards.filter(([, d]) => d.status === 'finished').length);
   const heading = $derived(app.activeCount >= 3 ? t('chorus') : app.activeCount ? t('active') : t('recent'));
 
   onMount(() => {
     app.connect();
-    fetch('version').then((r) => r.json()).then((v) => (version = v.version ?? '')).catch(() => {});
+    if (app.desktop) externalLinks();
+    else fetch('version').then((r) => r.json()).then((v) => (serverVersion = v.version ?? '')).catch(() => {});
   });
 
   function tidy() {
@@ -96,10 +100,12 @@
 
 <footer class="foot">
   <a href="#sites" data-tour="sites" onclick={(e) => { e.preventDefault(); app.go('sites'); }}>{t('sites')}</a>
-  <span>·</span>
-  <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>{t('terms')}</a>
-  <span>·</span>
-  <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>{t('privacy')}</a>
+  {#if !app.desktop}
+    <span>·</span>
+    <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>{t('terms')}</a>
+    <span>·</span>
+    <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>{t('privacy')}</a>
+  {/if}
   <span>·</span>
   <a href="#visite" onclick={(e) => { e.preventDefault(); app.go('mine'); app.tour = true; }}>{t('tourLink')}</a>
   <span>·</span>
@@ -108,6 +114,7 @@
 </footer>
 
 <Tour />
+{#if app.desktop && !app.tools.ready}<ToolsSetup />{/if}
 
 {#if app.toast}
   <div class="toast" data-kind={app.toast.kind} role={app.toast.kind === 'error' ? 'alert' : 'status'}>

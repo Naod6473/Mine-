@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../lib/i18n.svelte';
   import { app } from '../lib/state.svelte';
+  import { reveal } from '../lib/desktop';
   import { extOf, humanSize, label, relativeDate } from '../lib/labels';
   import type { HistoryEntry } from '../lib/types';
 
@@ -82,7 +83,8 @@
             {#if h.error}<span class="error" title={h.error}>{t('nope')} {h.error}</span>{/if}
           </div>
           <div class="actions">
-            {#if href}<a {href} download={h.filename ?? ''} title={t('fileTitle')}>{t('file')}</a>{/if}
+            {#if app.desktop && h.status === 'ok'}<button onclick={() => reveal(h.filepath)} title={t('reveal')}>{t('file')}</button>
+            {:else if href}<a {href} download={h.filename ?? ''} title={t('fileTitle')}>{t('file')}</a>{/if}
             <button onclick={() => app.again(h)} title={t('againTitle')}>{t('again')}</button>
             <button onclick={() => copy(h)} title={t('copyTitle')}>{t('copy')}</button>
             <button class="x" onclick={() => app.removeHistory(h.key)} aria-label={t('removeHistory')} title={t('removeShort')}>×</button>

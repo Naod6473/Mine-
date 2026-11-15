@@ -23,6 +23,14 @@ Mine!? télécharge des vidéos, de la musique, des sous-titres ou des miniature
 - **Français et anglais** : langue du navigateur, ou au choix avec le bouton FR / EN. En français, la mouette crie « À moi ! », en anglais « Mine! ».
 - **Jour et nuit** : automatique, ou au choix avec le bouton soleil/lune (fondu doux), utilisable au téléphone, installable comme une app (menu « Partager » sur Android).
 
+## App de bureau (Windows, macOS, Linux)
+
+La même interface, sans serveur : les fichiers arrivent dans le dossier Téléchargements de l'ordinateur. Au premier lancement, l'app récupère [yt-dlp](https://github.com/yt-dlp/yt-dlp), ffmpeg et deno (une seule fois), puis yt-dlp se met à jour tout seul à chaque démarrage.
+
+Les installeurs (`.exe`, `.dmg`, `.AppImage`, `.deb`) sont construits par GitHub Actions et publiés dans les [releases](https://github.com/Naod6473/Mine-/releases). Ils ne sont pas signés : Windows peut afficher « éditeur inconnu » (Informations complémentaires > Exécuter quand même), et macOS demande un clic droit > Ouvrir la première fois.
+
+Le code est dans `desktop/` (Tauri 2, Rust). Pour le lancer en local : `cd desktop && npm ci && npm --prefix ../ui ci && npx tauri dev`.
+
 ## Installation sur Proxmox VE
 
 Sur l'hôte Proxmox, en root :

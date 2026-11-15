@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '../lib/i18n.svelte';
+  import { chooseFolder } from '../lib/desktop';
   import { app } from '../lib/state.svelte';
   import { label } from '../lib/labels';
   import type { TypeOption } from '../lib/types';
@@ -39,6 +40,7 @@
     app.options.quality = f?.quality?.default ?? 'best';
   }
   async function refreshCookies() {
+    if (app.desktop) return;
     try { cookies = !!(await (await fetch('cookie-status')).json()).has_cookies; } catch { cookies = null; }
   }
   async function uploadCookies(e: Event) {
@@ -172,20 +174,28 @@
       <label class="check"><input type="checkbox" checked={app.sound} onchange={(e) => app.setSound(e.currentTarget.checked)} /> {t('soundOn')}</label>
     </div>
 
-    <div class="row bm">
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <a class="bookmarklet" href={bookmarklet} onclick={(e) => { e.preventDefault(); app.notify(t('bookmarkletClick')); }}>{t('bookmarklet')}</a>
-      <span class="muted">{t('bookmarkletHint')}</span>
-    </div>
+    {#if app.desktop}
+      <div class="row bm">
+        <span class="lbl">{t('saveTo')}</span>
+        <span class="muted path" title={String(app.config?.DOWNLOAD_DIR ?? '')}>{app.config?.DOWNLOAD_DIR ?? ''}</span>
+        <button class="link" onclick={() => chooseFolder().catch(() => {})}>{t('change')}</button>
+      </div>
+    {:else}
+      <div class="row bm">
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <a class="bookmarklet" href={bookmarklet} onclick={(e) => { e.preventDefault(); app.notify(t('bookmarkletClick')); }}>{t('bookmarklet')}</a>
+        <span class="muted">{t('bookmarkletHint')}</span>
+      </div>
+    {/if}
 
     <div class="foot">
-      <div class="cookies">
+      {#if !app.desktop}<div class="cookies">
         <span class="lbl">{t('cookies')}</span>
         <span class="muted">{cookies ? t('cookieSet') : cookies === false ? t('cookieNone') : '…'}</span>
         <button class="link" onclick={() => cookieInput?.click()}>{cookies ? t('replace') : t('sendFile')}</button>
         {#if cookies}<button class="link" onclick={deleteCookies}>{t('remove')}</button>{/if}
         <input bind:this={cookieInput} type="file" accept=".txt,text/plain" hidden onchange={uploadCookies} />
-      </div>
+      </div>{/if}
       <form class="preset" onsubmit={savePreset}>
         <input bind:value={presetName} placeholder={t('presetName')} aria-label={t('presetName')} />
         <button class="ghost" disabled={!presetName.trim()}>{t('save')}</button>
@@ -225,6 +235,7 @@
   .check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
   .check input { accent-color: var(--ink); width: 15px; height: 15px; }
   .bm { align-items: center; flex-wrap: nowrap; }
+  .path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .bookmarklet { flex: none; padding: 7px 14px; border-radius: 99px; background: var(--ink); color: var(--bg); font: 600 13px var(--body); text-decoration: none; cursor: grab; }
   .bm .muted { font-size: 12.5px; line-height: 1.4; }
   .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; }

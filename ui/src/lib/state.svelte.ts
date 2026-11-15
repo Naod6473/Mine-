@@ -3,6 +3,7 @@ import type { Catalog, Download, HistoryEntry, Options, Preset, ServerConfig } f
 import { load, save } from './storage';
 import { siteOf } from './labels';
 import { t } from './i18n.svelte';
+import { DESKTOP, desktopPost, desktopSocket } from './desktop';
 
 const K = { history: 'mine.history.v1', options: 'mine.options.v1', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
 const HISTORY_MAX = 500;
@@ -39,6 +40,9 @@ class AppState {
   celebrate = $state(false);
   private celebrateTimer: ReturnType<typeof setTimeout> | undefined;
   toast = $state<{ text: string; kind: 'info' | 'error' } | null>(null);
+  /** Version de bureau : où en sont yt-dlp, ffmpeg et deno. */
+  tools = $state<{ ready: boolean; stage: string; percent: number | null; error: string | null }>({ ready: !DESKTOP, stage: '', percent: null, error: null });
+  readonly desktop = DESKTOP;
   private socket: Socket | null = null;
   /** Liens lancés depuis ce navigateur : leur fichier y est envoyé automatiquement à la fin. */
   private mine = new Set<string>(sessionLoad());
@@ -61,9 +65,8 @@ class AppState {
   });
 
   connect() {
-    const path = new URL('socket.io', document.baseURI).pathname;
-    const s = io({ path, transports: ['websocket', 'polling'] });
-    this.socket = s;
+    const s = DESKTOP ? (desktopSocket() as unknown as Socket) : this.socketIo();
+    s.on('tools', (raw: string) => { if (raw) this.tools = JSON.parse(raw); });
     s.on('connect', () => { this.connected = true; this.everConnected = true; });
     s.on('disconnect', () => { this.connected = false; });
     const parse = <T>(raw: string): T => JSON.parse(raw) as T;
@@ -97,7 +100,8 @@ class AppState {
         this.celebrate = true;
         clearTimeout(this.celebrateTimer);
         this.celebrateTimer = setTimeout(() => (this.celebrate = false), 2400);
-        if (this.mine.has(d.url)) {
+        if (DESKTOP) this.shout(d);
+        else if (this.mine.has(d.url)) {
           if (this.sendToBrowser) this.deliver(d);
           this.shout(d);
         }
@@ -118,6 +122,13 @@ class AppState {
     });
   }
 
+  private socketIo() {
+    const path = new URL('socket.io', document.baseURI).pathname;
+    const s = io({ path, transports: ['websocket', 'polling'] });
+    this.socket = s;
+    return s;
+  }
+
   /** Ajoute ou met à jour un téléchargement terminé (réussi ou non) dans l'historique local. */
   record(d: Download) {
     if (d.status !== 'finished' && d.status !== 'error') return;
@@ -127,6 +138,7 @@ class AppState {
       status: d.status === 'finished' ? 'ok' : 'error', error: d.status === 'error' ? (d.msg || d.error || null) : null,
       download_type: d.download_type, format: d.format, quality: d.quality, folder: d.folder || '',
       filename: d.filename ?? null, size: d.size ?? null, date: Math.round(d.timestamp / 1e6),
+      filepath: d.filepath ?? null,
     };
     const i = this.history.findIndex((h) => h.key === key);
     if (i >= 0) this.history[i] = entry;
@@ -323,6 +335,7 @@ function sessionSave(set: Set<string>) {
 function hiddenKey(key: string, d: Download) { return `${key}#${d.timestamp}`; }
 
 async function post(path: string, body: unknown): Promise<{ status?: string; msg?: string }> {
+  if (DESKTOP) return desktopPost(path, body);
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const text = await r.text();
   if (!r.ok) throw new Error(text.replace(/^\d{3}:\s*/, '') || r.statusText);

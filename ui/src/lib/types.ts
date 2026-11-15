@@ -19,6 +19,7 @@ export interface Download {
   eta: number | null;
   size: number | null;
   filename?: string | null;
+  filepath?: string | null;
   thumbnail?: string | null;
   timestamp: number;
   chapter_files?: { filename: string; size?: number }[];
@@ -81,5 +82,6 @@ export interface HistoryEntry {
   folder: string;
   filename: string | null;
   size: number | null;
+  filepath?: string | null;
   date: number;         // ms
 }

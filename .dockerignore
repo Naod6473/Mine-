@@ -6,3 +6,4 @@ ui/dist
 **/__pycache__
 *.md
 !README.md
+desktop/

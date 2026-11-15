@@ -6,3 +6,6 @@ __pycache__/
 .pytest_cache/
 /downloads/
 .env
+desktop/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/

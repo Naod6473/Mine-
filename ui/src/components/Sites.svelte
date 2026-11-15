@@ -12,7 +12,7 @@
   let q = $state('');
 
   onMount(async () => {
-    try { sites = await (await fetch('sites')).json(); } catch { failed = true; }
+    try { sites = await (await fetch(app.desktop ? 'sites.json' : 'sites')).json(); } catch { failed = true; }
   });
 
   const popular = $derived((sites ?? []).filter((s) => POPULAR.includes(s.name)));
