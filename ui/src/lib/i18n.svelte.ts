@@ -31,6 +31,8 @@ const fr = {
   copied: 'Lien copié.', copyFailed: 'Copie impossible ici : le lien est {n}', imported: '{n} entrée(s) ajoutée(s).',
   badImport: 'Pas à toi. Ce fichier n’est pas un historique Mine!?.', kept: 'Gardé dans ce navigateur, 500 entrées maximum.',
   export: 'Exporter', import: 'Importer', sure: 'Sûr ? Cliquer encore', clearAll: 'Tout effacer', exportName: 'mine-historique',
+  soundOn: 'Cri de mouette à la fin', bookmarklet: 'À moi !', bookmarkletHint: 'Glisse ce bouton dans ta barre de favoris : sur YouTube ou ailleurs, un clic dessus envoie la page à Mine!?.',
+  bookmarkletClick: 'Glisse-le dans ta barre de favoris plutôt que de cliquer dessus.',
   today: "Aujourd'hui, {n}", yesterday: 'Hier, {n}', left: 'reste {n}', back: 'Retour à Mine!?',
 };
 type Dict = typeof fr;
@@ -63,6 +65,8 @@ const en: Dict = {
   copied: 'Link copied.', copyFailed: 'Copy not possible here: the link is {n}', imported: '{n} entry(ies) added.',
   badImport: 'Not yours. This file is not a Mine!? history.', kept: 'Kept in this browser, 500 entries at most.',
   export: 'Export', import: 'Import', sure: 'Sure? Click again', clearAll: 'Clear all', exportName: 'mine-history',
+  soundOn: 'Gull cry when done', bookmarklet: 'Mine!', bookmarkletHint: 'Drag this button to your bookmarks bar: on YouTube or anywhere else, one click sends the page to Mine!?.',
+  bookmarkletClick: 'Drag it to your bookmarks bar instead of clicking it.',
   today: 'Today, {n}', yesterday: 'Yesterday, {n}', left: '{n} left', back: 'Back to Mine!?',
 };
 

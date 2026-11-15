@@ -10,6 +10,9 @@
   const isMedia = $derived(app.options.download_type === 'video' || app.options.download_type === 'audio');
   const dirs = $derived(app.options.download_type === 'audio' ? app.audioDirs : app.dirs);
 
+  // Favori : ouvre Mine!? dans un nouvel onglet avec le lien de la page et le lance tout de suite.
+  const bookmarklet = `javascript:void(open(${JSON.stringify(new URL('.', document.baseURI).href + '?go=1&url=')}+encodeURIComponent(location.href)))`;
+
   let presetName = $state('');
   let cookies = $state<boolean | null>(null);
   let cookieInput: HTMLInputElement | undefined = $state();
@@ -165,6 +168,16 @@
       </div>
     {/if}
 
+    <div class="row checks">
+      <label class="check"><input type="checkbox" checked={app.sound} onchange={(e) => app.setSound(e.currentTarget.checked)} /> {t('soundOn')}</label>
+    </div>
+
+    <div class="row bm">
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <a class="bookmarklet" href={bookmarklet} onclick={(e) => { e.preventDefault(); app.notify(t('bookmarkletClick')); }}>{t('bookmarklet')}</a>
+      <span class="muted">{t('bookmarkletHint')}</span>
+    </div>
+
     <div class="foot">
       <div class="cookies">
         <span class="lbl">{t('cookies')}</span>
@@ -211,6 +224,9 @@
   .checks { gap: 22px; }
   .check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
   .check input { accent-color: var(--ink); width: 15px; height: 15px; }
+  .bm { align-items: center; flex-wrap: nowrap; }
+  .bookmarklet { flex: none; padding: 7px 14px; border-radius: 99px; background: var(--ink); color: var(--bg); font: 600 13px var(--body); text-decoration: none; cursor: grab; }
+  .bm .muted { font-size: 12.5px; line-height: 1.4; }
   .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; }
   .cookies { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 13px; }
   .preset { display: flex; gap: 10px; align-items: center; }

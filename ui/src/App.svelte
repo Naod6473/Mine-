@@ -15,6 +15,7 @@
   // Lien reçu par le partage Android (PWA) ou par ?url=…
   const params = new URLSearchParams(location.search);
   const shared = extractUrl(params.get('url')) || extractUrl(params.get('text')) || extractUrl(params.get('title'));
+  const autostart = !!shared && params.get('go') === '1';
   if (shared) history.replaceState(null, '', location.pathname);
 
   let version = $state('');
@@ -68,7 +69,7 @@
   {:else if app.tab === 'mine'}
     <section class="hero">
       <Sky />
-      <MineBar initialUrl={shared} />
+      <MineBar initialUrl={shared} {autostart} />
     </section>
 
     {#if app.cards.length}

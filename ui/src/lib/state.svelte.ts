@@ -30,6 +30,9 @@ class AppState {
   presets = $state<Preset[]>(load(K.presets, []));
   tab = $state<Tab>(tabFromHash());
   submitting = $state(false);
+  /** Cri de mouette à la fin d'un téléchargement lancé depuis ce navigateur. */
+  sound = $state<boolean>(load('mine.sound.v1', true));
+  private cry: HTMLAudioElement | null = null;
   /** Vrai pendant ~2 s après un téléchargement réussi : la mouette crie « Mine ! ». */
   celebrate = $state(false);
   private celebrateTimer: ReturnType<typeof setTimeout> | undefined;
@@ -92,7 +95,10 @@ class AppState {
         this.celebrate = true;
         clearTimeout(this.celebrateTimer);
         this.celebrateTimer = setTimeout(() => (this.celebrate = false), 2400);
-        if (this.mine.has(d.url) && this.sendToBrowser) this.deliver(d);
+        if (this.mine.has(d.url)) {
+          if (this.sendToBrowser) this.deliver(d);
+          this.shout(d);
+        }
       }
       if (this.mine.delete(d.url)) sessionSave(this.mine);
     });
@@ -185,6 +191,7 @@ class AppState {
   }
 
   async add(url: string): Promise<boolean> {
+    this.askNotifications();
     this.submitting = true;
     try { return await this.addInner(url); } finally { this.submitting = false; }
   }
@@ -236,6 +243,31 @@ class AppState {
   async clearFinished() {
     const ids = Object.entries(this.done).filter(([, d]) => d.status === 'finished').map(([k]) => k);
     if (ids.length) await post('delete', { ids, where: 'done' }).catch(() => {});
+  }
+
+  setSound(v: boolean) { this.sound = v; save('mine.sound.v1', v); if (v) this.playCry(); }
+
+  private playCry() {
+    try {
+      this.cry ??= Object.assign(new Audio('mine.mp3'), { volume: 0.55 });
+      this.cry.currentTime = 0;
+      void this.cry.play().catch(() => {});
+    } catch {}
+  }
+
+  /** Fin d'un téléchargement : un cri, et une notification si l'onglet est caché. */
+  private shout(d: Download) {
+    if (this.sound) this.playCry();
+    if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(t('cry'), { body: d.title || d.url, icon: 'icon-192.png', tag: d.url }); } catch {}
+    }
+  }
+
+  /** Demande une fois, au premier clic sur « Mine ! », le droit de prévenir quand c'est fini. */
+  private askNotifications() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      try { void Notification.requestPermission().catch(() => {}); } catch {}
+    }
   }
 
   /** Le serveur ne garde pas les fichiers : il les envoie au navigateur puis les efface. */

@@ -5,7 +5,7 @@
   import { label } from '../lib/labels';
   import Advanced from './Advanced.svelte';
 
-  let { initialUrl = '' }: { initialUrl?: string } = $props();
+  let { initialUrl = '', autostart = false }: { initialUrl?: string; autostart?: boolean } = $props();
   let url = $state(untrack(() => initialUrl));
   let input: HTMLInputElement | undefined = $state();
   const valid = $derived(isUrl(url));
@@ -17,6 +17,36 @@
     const ok = await app.add(url.trim());
     if (ok) url = '';
     input?.focus();
+  }
+
+  // Lien reçu par le favori « À moi ! » : on lance dès que le serveur est prêt.
+  let started = false;
+  $effect(() => {
+    if (autostart && !started && app.connected && app.config && valid) { started = true; submit(); }
+  });
+
+  /** Un lien glissé sur la page part tout de suite ; un lien collé hors du champ le remplit. */
+  let dragging = $state(false);
+  function linkFrom(dt: DataTransfer | null): string {
+    const raw = dt?.getData('text/uri-list') || dt?.getData('text/plain') || '';
+    return raw.split(/\s+/).find((x) => isUrl(x)) ?? '';
+  }
+  function onDragOver(e: DragEvent) {
+    if (!e.dataTransfer?.types.some((x) => x === 'text/uri-list' || x === 'text/plain')) return;
+    e.preventDefault(); dragging = true;
+  }
+  function onDrop(e: DragEvent) {
+    dragging = false;
+    const link = linkFrom(e.dataTransfer);
+    if (!link) return;
+    e.preventDefault(); url = link; submit();
+  }
+  function onPaste(e: ClipboardEvent) {
+    const el = document.activeElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || (el as HTMLElement).isContentEditable)) return;
+    const link = linkFrom(e.clipboardData);
+    if (!link) return;
+    e.preventDefault(); url = link; input?.focus();
   }
 
   function summary(): string {
@@ -31,7 +61,9 @@
   }
 </script>
 
-<form class="bar" class:invalid={url.length > 0 && !valid} onsubmit={submit} autocomplete="off">
+<svelte:window ondragover={onDragOver} ondragleave={(e) => { if (!e.relatedTarget) dragging = false; }} ondrop={onDrop} onpaste={onPaste} />
+
+<form class="bar" class:dragging class:invalid={url.length > 0 && !valid} onsubmit={submit} autocomplete="off">
   <input bind:this={input} bind:value={url} type="url" inputmode="url" spellcheck="false"
     aria-label={t('linkLabel')} enterkeyhint="go" />
   {#if url}
@@ -65,6 +97,7 @@
   .bar { position: relative; display: flex; align-items: center; gap: 4px; height: 62px; padding: 6px; border-radius: 99px;
     background: var(--surface); border: 1px solid var(--line); transition: border-color .2s, box-shadow .2s; }
   .bar:focus-within { border-color: var(--ink); box-shadow: 0 0 0 4px color-mix(in oklab, var(--beak) 18%, transparent); }
+  .bar.dragging { border-color: var(--beak); border-style: dashed; box-shadow: 0 0 0 6px color-mix(in oklab, var(--beak) 22%, transparent); }
   .bar.invalid { border-color: color-mix(in oklab, var(--danger) 55%, var(--line)); }
   input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font: 16.5px var(--body); padding: 0 8px 0 18px; outline: none; }
   .clear { flex: none; width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
