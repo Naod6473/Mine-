@@ -41,6 +41,7 @@ export interface ServerConfig {
   CREATE_CUSTOM_DIRS: boolean;
   DEFAULT_FOLDER: string;
   PUBLIC_HOST_URL: string;
+  SEND_TO_BROWSER?: boolean;
   PUBLIC_HOST_AUDIO_URL: string;
   DEFAULT_OPTION_PLAYLIST_ITEM_LIMIT?: number | string;
   [k: string]: unknown;

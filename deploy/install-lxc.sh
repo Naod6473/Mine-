@@ -91,7 +91,7 @@ services:
       PGID: "1000"
       TZ: "$(cat /etc/timezone 2>/dev/null || echo Europe/Paris)"
       MAX_CONCURRENT_DOWNLOADS: "3"
-      CLEAR_COMPLETED_AFTER: "604800"
+      CLEAR_COMPLETED_AFTER: "86400"
       YTDL_NIGHTLY_UPDATE_TIME: "04:00"
 EOF
 

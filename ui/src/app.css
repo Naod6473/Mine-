@@ -34,6 +34,8 @@ body {
   font-family: var(--body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 }
 button, input, select { font-family: inherit; color: inherit; }
+/* Listes déroulantes natives : sous Windows, elles gardent un fond blanc si on ne le précise pas. */
+select option, select optgroup { background-color: var(--surface); color: var(--ink); }
 :focus-visible { outline: 2px solid var(--beak); outline-offset: 2px; }
 ::selection { background: color-mix(in oklab, var(--beak) 35%, transparent); }
 img { max-width: 100%; }

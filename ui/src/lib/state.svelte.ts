@@ -34,6 +34,9 @@ class AppState {
   private celebrateTimer: ReturnType<typeof setTimeout> | undefined;
   toast = $state<{ text: string; kind: 'info' | 'error' } | null>(null);
   private socket: Socket | null = null;
+  /** Liens lancés depuis ce navigateur : leur fichier y est envoyé automatiquement à la fin. */
+  private mine = new Set<string>(sessionLoad());
+  private claimUntil = 0;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** Cartes visibles sur l'écran Mine : en cours + terminées non rangées, les plus récentes d'abord. */
@@ -68,7 +71,11 @@ class AppState {
       this.hidden = this.hidden.filter((h) => live.has(h));
       save(K.hidden, this.hidden);
     });
-    s.on('added', (raw: string) => { const d = parse<Download>(raw); this.queue[d.url] = d; });
+    s.on('added', (raw: string) => {
+      const d = parse<Download>(raw);
+      this.queue[d.url] = d;
+      if (Date.now() < this.claimUntil) { this.mine.add(d.url); sessionSave(this.mine); }
+    });
     s.on('updated', (raw: string) => {
       const d = parse<Download>(raw);
       if (this.queue[d.url]) this.queue[d.url] = d;
@@ -84,7 +91,9 @@ class AppState {
         this.celebrate = true;
         clearTimeout(this.celebrateTimer);
         this.celebrateTimer = setTimeout(() => (this.celebrate = false), 3800);
+        if (this.mine.has(d.url) && this.sendToBrowser) this.deliver(d);
       }
+      if (this.mine.delete(d.url)) sessionSave(this.mine);
     });
     s.on('canceled', (raw: string) => { delete this.queue[parse<string>(raw)]; });
     s.on('cleared', (raw: string) => { delete this.done[parse<string>(raw)]; });
@@ -173,6 +182,7 @@ class AppState {
 
   private async addInner(url: string): Promise<boolean> {
     const body = this.payload(url, this.mode === 'advanced');
+    this.claim();
     try {
       const r = await post('add', body);
       if (r.status === 'error') {
@@ -194,6 +204,7 @@ class AppState {
   async again(h: HistoryEntry): Promise<boolean> {
     const body: Record<string, unknown> = { url: h.url, download_type: h.download_type, format: h.format, quality: h.quality, codec: 'auto', auto_start: true };
     if (this.config?.CUSTOM_DIRS && h.folder) body.folder = h.folder;
+    this.claim();
     try {
       const r = await post('add', body);
       if (r.status === 'error') { this.notify(`Pas à toi. ${r.msg ?? ''}`.trim(), 'error'); return false; }
@@ -218,12 +229,45 @@ class AppState {
     if (ids.length) await post('delete', { ids, where: 'done' }).catch(() => {});
   }
 
+  /** Le serveur ne garde pas les fichiers : il les envoie au navigateur puis les efface. */
+  get sendToBrowser() { return this.config?.SEND_TO_BROWSER !== false; }
+
+  /** Les téléchargements annoncés dans la minute qui suit un ajout viennent de ce navigateur. */
+  private claim() { this.claimUntil = Date.now() + 60_000; }
+
+  /** Déclenche le téléchargement du fichier dans le navigateur. */
+  deliver(d: Download) {
+    const href = this.takeUrl(d);
+    if (!href) return;
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = '';
+    a.rel = 'noopener';
+    document.body.append(a);
+    a.click();
+    a.remove();
+  }
+
+  takeUrl(d: { url: string; filename?: string | null }): string | null {
+    return d.filename ? `take?id=${encodeURIComponent(d.url)}` : null;
+  }
+
   fileUrl(d: { download_type: string; folder: string; filename?: string | null }): string | null {
     if (!d.filename || !this.config) return null;
+    // Envoyé au navigateur puis effacé : il n'y a plus de fichier à pointer sur le serveur.
+    if (this.sendToBrowser) return null;
     let base = d.download_type === 'audio' ? this.config.PUBLIC_HOST_AUDIO_URL : this.config.PUBLIC_HOST_URL;
     if (d.folder) base += d.folder.split('/').map(encodeURIComponent).join('/') + '/';
     return base + encodeURIComponent(d.filename);
   }
+}
+
+const MINE_KEY = 'mine.claimed.v1';
+function sessionLoad(): string[] {
+  try { return JSON.parse(sessionStorage.getItem(MINE_KEY) ?? '[]'); } catch { return []; }
+}
+function sessionSave(set: Set<string>) {
+  try { sessionStorage.setItem(MINE_KEY, JSON.stringify([...set].slice(-200))); } catch {}
 }
 
 function hiddenKey(key: string, d: Download) { return `${key}#${d.timestamp}`; }

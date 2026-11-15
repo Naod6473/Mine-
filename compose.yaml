@@ -18,6 +18,6 @@ services:
       # Nom des fichiers : titre.extension (voir les variables yt-dlp pour le modifier).
       OUTPUT_TEMPLATE: "%(title)s.%(ext)s"
       # Retire du serveur les téléchargements terminés au bout de 7 jours (l'historique du navigateur reste).
-      CLEAR_COMPLETED_AFTER: "604800"
+      CLEAR_COMPLETED_AFTER: "86400"
       # Met yt-dlp à jour chaque nuit à 4 h, les sites changent souvent.
       YTDL_NIGHTLY_UPDATE_TIME: "04:00"

@@ -2,6 +2,7 @@
 # pylint: disable=no-member,method-hidden
 
 import os
+import urllib.parse
 import sys
 import asyncio
 from datetime import datetime, timedelta
@@ -79,6 +80,7 @@ class Config:
         'CUSTOM_DIRS_EXCLUDE_REGEX': r'(^|/)[.@].*$',
         'DEFAULT_FOLDER': '',
         'DELETE_FILE_ON_TRASHCAN': 'false',
+        'SEND_TO_BROWSER': 'true',
         'STATE_DIR': '.',
         'URL_PREFIX': '',
         'PUBLIC_HOST_URL': 'download/',
@@ -113,7 +115,7 @@ class Config:
         'YTDL_NIGHTLY_UPDATE_TIME': '',
     }
 
-    _BOOLEAN = ('DOWNLOAD_DIRS_INDEXABLE', 'CUSTOM_DIRS', 'CREATE_CUSTOM_DIRS', 'HTTPS', 'ENABLE_ACCESSLOG', 'ALLOW_YTDL_OPTIONS_OVERRIDES', 'ALLOW_PRIVATE_ADDRESSES')
+    _BOOLEAN = ('DOWNLOAD_DIRS_INDEXABLE', 'CUSTOM_DIRS', 'CREATE_CUSTOM_DIRS', 'HTTPS', 'ENABLE_ACCESSLOG', 'ALLOW_YTDL_OPTIONS_OVERRIDES', 'ALLOW_PRIVATE_ADDRESSES', 'SEND_TO_BROWSER')
 
     def __init__(self):
         for k, v in self._DEFAULTS.items():
@@ -296,6 +298,7 @@ class Config:
         'SUBSCRIPTION_DEFAULT_CHECK_INTERVAL',
         'ALLOW_YTDL_OPTIONS_OVERRIDES',
         'DELETE_FILE_ON_TRASHCAN',
+        'SEND_TO_BROWSER',
     )
 
     def frontend_safe(self) -> dict:
@@ -1504,8 +1507,30 @@ async def robots(request):
         response = web.FileResponse(os.path.join(config.BASE_DIR, config.ROBOTS_TXT))
     else:
         response = web.Response(
-            text="User-agent: *\nDisallow: /download/\nDisallow: /audio_download/\n"
+            text="User-agent: *\nDisallow: /download/\nDisallow: /audio_download/\nDisallow: /take\n"
         )
+    return response
+
+@routes.get(config.URL_PREFIX + 'take')
+async def take(request):
+    """Envoie le fichier d'un téléchargement terminé au navigateur.
+
+    Avec SEND_TO_BROWSER, le fichier est effacé du serveur une fois envoyé en
+    entier : le serveur ne sert que d'étape de passage.
+    """
+    url = request.query.get('id', '')
+    path = dqueue.finished_file(url)
+    if path is None:
+        raise web.HTTPNotFound(reason='Fichier introuvable')
+    name = os.path.basename(path)
+    response = web.FileResponse(path, headers={
+        'Content-Disposition': "attachment; filename*=UTF-8''" + urllib.parse.quote(name, safe=''),
+        'Cache-Control': 'no-store',
+    })
+    await response.prepare(request)
+    await response.write_eof()
+    if config.SEND_TO_BROWSER and response.status == 200 and request.method == 'GET':
+        await dqueue.clear([url], delete_files=True)
     return response
 
 @routes.get(config.URL_PREFIX + 'version')

@@ -8,7 +8,7 @@
   const active = $derived(!['finished', 'error', 'canceled'].includes(d.status));
   const known = $derived(d.status === 'downloading' && d.percent != null);
   const pct = $derived(d.status === 'finished' || d.status === 'error' || d.status === 'postprocessing' ? 100 : known ? d.percent ?? 0 : 0);
-  const href = $derived(d.status === 'finished' ? app.fileUrl(d) : null);
+  const href = $derived(d.status !== 'finished' ? null : app.sendToBrowser ? app.takeUrl(d) : app.fileUrl(d));
   const state = $derived.by(() => {
     switch (d.status) {
       case 'downloading': return known ? `Mine… ${Math.floor(d.percent ?? 0)} %` : 'Mine…';

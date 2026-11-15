@@ -49,6 +49,7 @@ def dq_env():
         cfg.CREATE_CUSTOM_DIRS = True
         cfg.CLEAR_COMPLETED_AFTER = 0
         cfg.DELETE_FILE_ON_TRASHCAN = 'false'
+        cfg.SEND_TO_BROWSER = False
         cfg.OUTPUT_TEMPLATE = "%(title)s.%(ext)s"
         cfg.OUTPUT_TEMPLATE_CHAPTER = "%(title)s.%(ext)s"
         cfg.OUTPUT_TEMPLATE_PLAYLIST = ""
@@ -2206,6 +2207,40 @@ async def test_clear_respects_mode_and_delete_files_flag(dq_env, mode, delete_fi
 
     assert os.path.exists(file_path) != expect_deleted
     assert not dq.done.exists(download.info.url)
+
+
+@pytest.mark.asyncio
+async def test_send_to_browser_always_deletes_on_clear(dq_env):
+    """Envoi au navigateur : le serveur n'est qu'une étape, rien n'y reste."""
+    notifier = AsyncMock()
+    dq_env.SEND_TO_BROWSER = True
+    dq = DownloadQueue(dq_env, notifier)
+
+    filename = "passage.mp4"
+    file_path = os.path.join(dq_env.DOWNLOAD_DIR, filename)
+    with open(file_path, "w") as f:
+        f.write("data")
+    download = _make_download(dq_env, status="finished", filename=filename)
+    await dq.done.put(download)
+
+    assert dq.finished_file(download.info.url) == os.path.realpath(file_path)
+    await dq.clear([download.info.url])
+
+    assert not os.path.exists(file_path)
+    assert dq.finished_file(download.info.url) is None
+
+
+@pytest.mark.asyncio
+async def test_finished_file_refuses_paths_outside_download_dir(dq_env):
+    dq = DownloadQueue(dq_env, AsyncMock())
+    outside_dir = tempfile.mkdtemp()
+    outside_file = os.path.join(outside_dir, "secret.txt")
+    with open(outside_file, "w") as f:
+        f.write("x")
+    download = _make_download(dq_env, status="finished", filename=os.path.relpath(outside_file, dq_env.DOWNLOAD_DIR))
+    await dq.done.put(download)
+    assert dq.finished_file(download.info.url) is None
+    assert dq.finished_file("inconnu") is None
 
 
 @pytest.mark.asyncio

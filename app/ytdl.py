@@ -2220,7 +2220,9 @@ class DownloadQueue:
         # delete_files; auto-clear and retry call clear() with no kwarg, so in
         # 'ask' mode those paths keep the files (there's nobody to ask).
         mode = self.config.DELETE_FILE_ON_TRASHCAN
-        should_delete = mode == 'true' or (mode == 'ask' and delete_files)
+        # Envoi au navigateur : le serveur ne garde rien, quel que soit le chemin.
+        should_delete = (mode == 'true' or (mode == 'ask' and delete_files)
+                         or getattr(self.config, 'SEND_TO_BROWSER', False) is True)
         for id in ids:
             if not self.done.exists(id):
                 log.warning(f'requested delete for non-existent download {id}')
@@ -2257,6 +2259,22 @@ class DownloadQueue:
             await self.done.delete(id)
             await self.notifier.cleared(id)
         return {'status': 'ok'}
+
+    def finished_file(self, id):
+        """Chemin du fichier principal d'un téléchargement terminé, ou None."""
+        if not id or not self.done.exists(id):
+            return None
+        info = self.done.get(id).info
+        if info.status != 'finished' or not getattr(info, 'filename', None):
+            return None
+        dldirectory, calc_error = self.__calc_download_path(info.download_type, info.folder)
+        if calc_error is not None or not dldirectory:
+            return None
+        base = os.path.realpath(dldirectory)
+        full = os.path.realpath(os.path.join(dldirectory, info.filename))
+        if not _is_within_directory(base, full) or not os.path.isfile(full):
+            return None
+        return full
 
     def get(self):
         return (list((k, v.info) for k, v in self.queue.items()) +

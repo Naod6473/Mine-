@@ -2,7 +2,7 @@
 
 <h1 align="center">Mine!?</h1>
 
-<p align="center">Tu colles un lien, tu appuies sur <b>Mine !</b>, et le fichier arrive sur ton serveur.</p>
+<p align="center">Tu colles un lien, tu appuies sur <b>Mine !</b>, et le fichier arrive dans ton navigateur.</p>
 
 <p align="center">
   <picture>
@@ -11,7 +11,7 @@
   </picture>
 </p>
 
-Mine!? télécharge des vidéos, de la musique, des sous-titres ou des miniatures depuis YouTube et des centaines d'autres sites (grâce à [yt-dlp](https://github.com/yt-dlp/yt-dlp)), directement sur ton Proxmox VE.
+Mine!? télécharge des vidéos, de la musique, des sous-titres ou des miniatures depuis YouTube et des centaines d'autres sites (grâce à [yt-dlp](https://github.com/yt-dlp/yt-dlp)), depuis ton Proxmox VE : le serveur télécharge et convertit, puis t'envoie le fichier et l'efface de son côté.
 
 - **Un seul écran** : un champ vide et un bouton. Entrée marche aussi.
 - **Options** (sous le champ) : type, format, qualité, codec, dossier, playlist, extrait, sous-titres, cookies et préréglages. Tes choix sont mémorisés dans le navigateur.
@@ -31,7 +31,7 @@ bash install-lxc.sh
 Le script :
 
 1. crée un LXC Debian 13 non privilégié (1 cœur, 1 Go de RAM, 8 Go de disque, `nesting=1`) ;
-2. y monte le dossier `/mnt/mine-downloads` de l'hôte sur `/downloads` ;
+2. y monte le dossier `/mnt/mine-downloads` de l'hôte sur `/downloads` (dossier de passage : les fichiers en sortent dès qu'ils sont envoyés au navigateur) ;
 3. installe Docker et lance Mine!? ;
 4. affiche l'adresse à ouvrir, par exemple `http://192.168.1.50:8081`.
 
@@ -72,13 +72,14 @@ docker compose up -d   # avec le compose.yaml de ce dépôt
 
 | Variable | Défaut | Rôle |
 | --- | --- | --- |
+| `SEND_TO_BROWSER` | `true` | Envoyer le fichier au navigateur à la fin, puis l'effacer du serveur. `false` pour garder les fichiers sur le serveur |
 | `MAX_CONCURRENT_DOWNLOADS` | `3` | Téléchargements en parallèle |
 | `OUTPUT_TEMPLATE` | `%(title)s.%(ext)s` | Nom des fichiers ([variables yt-dlp](https://github.com/yt-dlp/yt-dlp#output-template)) |
 | `OUTPUT_TEMPLATE_PLAYLIST` | `%(playlist_title)s/%(title)s.%(ext)s` | Nom des fichiers d'une playlist |
 | `AUDIO_DOWNLOAD_DIR` | `/downloads` | Dossier séparé pour l'audio |
 | `DEFAULT_FOLDER` | vide | Sous-dossier par défaut |
 | `CUSTOM_DIRS` / `CREATE_CUSTOM_DIRS` | `true` / `true` | Choix et création de sous-dossiers |
-| `CLEAR_COMPLETED_AFTER` | `0` | Secondes avant de retirer un téléchargement terminé de la liste du serveur (0 = jamais) |
+| `CLEAR_COMPLETED_AFTER` | `0` | Secondes avant de retirer un téléchargement terminé de la liste du serveur (0 = jamais). Avec l'envoi au navigateur, un fichier jamais récupéré est effacé à ce moment-là |
 | `YTDL_OPTIONS` | `{}` | Options yt-dlp en JSON, par exemple `{"ratelimit": 5000000}` |
 | `YTDL_NIGHTLY_UPDATE_TIME` | vide | Heure de mise à jour quotidienne de yt-dlp, par exemple `04:00` |
 | `PUID` / `PGID` | `1000` | Utilisateur propriétaire des fichiers |
