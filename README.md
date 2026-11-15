@@ -1,4 +1,4 @@
-<p align="center"><img src="ui/public/icon.svg" width="96" alt=""></p>
+<p align="center"><img src="ui/public/logo.webp" width="140" alt=""></p>
 
 <h1 align="center">Mine!?</h1>
 
@@ -14,9 +14,9 @@
 Mine!? télécharge des vidéos, de la musique, des sous-titres ou des miniatures depuis YouTube et des centaines d'autres sites (grâce à [yt-dlp](https://github.com/yt-dlp/yt-dlp)), directement sur ton Proxmox VE.
 
 - **Un seul écran** : un champ vide et un bouton. Entrée marche aussi.
-- **Mode Avancé** : type, format, qualité, codec, dossier, playlist, extrait, sous-titres, cookies et préréglages. Tes choix sont mémorisés dans le navigateur.
+- **Options** (sous le champ) : type, format, qualité, codec, dossier, playlist, extrait, sous-titres, cookies et préréglages. Tes choix sont mémorisés dans le navigateur.
 - **Historique** : il est gardé dans le navigateur (500 entrées maximum). Tu peux y chercher, filtrer, relancer un téléchargement, copier le lien, ou exporter et importer l'historique en JSON.
-- **Suivi en direct** : une mouette vole le long de la barre de progression, avec la vitesse et le temps restant.
+- **Suivi en direct** : la mouette s'envole pendant le téléchargement et affiche l'avancement, avec la vitesse et le temps restant pour chaque fichier.
 - **Thème clair et sombre** automatique, utilisable au téléphone, installable comme une app (menu « Partager » sur Android).
 
 ## Installation sur Proxmox VE

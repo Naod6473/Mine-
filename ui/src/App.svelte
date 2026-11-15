@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { app, extractUrl } from './lib/state.svelte';
-  import GullMark from './components/GullMark.svelte';
   import MineBar from './components/MineBar.svelte';
-  import DownloadCard from './components/DownloadCard.svelte';
+  import DownloadRow from './components/DownloadRow.svelte';
+  import Sky from './components/Sky.svelte';
   import History from './components/History.svelte';
   import Splash from './components/Splash.svelte';
 
@@ -34,7 +34,7 @@
 
 <header>
   <button class="brand" onclick={() => (app.tab = 'mine')} aria-label="Mine!?, accueil">
-    <GullMark size={30} shout={app.activeCount > 0} />
+    <img src="gull-head.png" alt="" width="30" height="30" />
     <span>Mine!?</span>
   </button>
   <nav aria-label="Sections">
@@ -54,7 +54,7 @@
     <Splash text="Mine ?" />
   {:else if app.tab === 'mine'}
     <section class="hero">
-      <div class="crest" aria-hidden="true"><GullMark size={84} shout={app.activeCount > 0} /></div>
+      <Sky />
       <MineBar initialUrl={shared} />
     </section>
 
@@ -65,7 +65,7 @@
           {#if finishedCount}<button class="link" onclick={tidy}>Tout ranger</button>{/if}
         </div>
         {#each app.cards as [key, d] (key)}
-          <DownloadCard {key} {d} />
+          <DownloadRow {key} {d} />
         {/each}
       </section>
     {/if}
@@ -87,31 +87,29 @@
 {/if}
 
 <style>
-  header { max-width: 760px; margin: 0 auto; padding: 22px 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .brand { display: inline-flex; align-items: center; gap: 10px; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 0; font: inherit; }
-  .brand span { font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
-  nav { display: flex; gap: 4px; }
-  nav button { position: relative; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  nav button:hover { color: var(--ink); }
-  nav button.on { color: var(--ink); }
-  nav button.on::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 2px; border-radius: 2px; background: var(--accent); }
-  .badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
-  main { max-width: 760px; margin: 0 auto; padding: 0 20px 40px; }
-  .hero { padding: clamp(32px, 9vh, 96px) 0 36px; }
-  .crest { display: grid; place-items: center; margin-bottom: 28px; }
-  .crest :global(svg) { filter: drop-shadow(0 8px 16px rgb(30 35 41 / .10)); }
-  .cards { display: grid; gap: 10px; }
-  .cards-head { display: flex; justify-content: space-between; align-items: baseline; margin: 8px 2px 2px; }
-  h2 { margin: 0; font-size: 13px; font-weight: 650; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
-  .link { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+  header { max-width: 720px; margin: 0 auto; padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; border: 0; background: none; cursor: pointer; padding: 0; }
+  .brand img { border-radius: 9px; }
+  .brand span { font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -.01em; }
+  nav { display: flex; gap: 20px; }
+  nav button { position: relative; border: 0; background: none; color: var(--muted); font: 500 14px var(--body); padding: 6px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  nav button:hover, nav button.on { color: var(--ink); }
+  nav button.on { font-weight: 600; }
+  .badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--beak); color: #14181C; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
+  main { max-width: 640px; margin: 0 auto; padding: 0 20px 40px; }
+  .hero { padding: clamp(8px, 4vh, 40px) 0 32px; }
+  .cards { display: grid; gap: 26px; margin-top: 8px; }
+  .cards-head { display: flex; justify-content: space-between; align-items: baseline; }
+  h2 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .link { border: 0; background: none; color: var(--muted); font: 500 13px var(--body); cursor: pointer; padding: 0; }
   .link:hover { color: var(--ink); }
-  main:has(:global(.history)) { padding-top: 36px; }
-  .offline { max-width: 720px; margin: 16px auto 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in oklab, var(--danger) 12%, var(--surface)); color: var(--danger); font-size: 13.5px; font-weight: 600; text-align: center; }
-  .foot { text-align: center; padding: 24px 20px 32px; font-size: 12px; color: var(--muted); }
+  main:has(:global(.history)) { padding-top: 36px; max-width: 720px; }
+  .offline { max-width: 600px; margin: 14px auto 0; padding: 8px 14px; border-radius: 99px; background: color-mix(in oklab, var(--danger) 10%, var(--bg)); color: var(--danger); font-size: 13px; font-weight: 500; text-align: center; }
+  .foot { text-align: center; padding: 28px 20px 32px; font-size: 12px; color: var(--muted); }
   .foot a { color: inherit; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px;
-    padding: 12px 12px 12px 18px; border-radius: 14px; background: var(--ink); color: var(--bg); font-size: 14px; box-shadow: 0 10px 30px -10px rgb(0 0 0 / .4); animation: pop .35s var(--spring); z-index: 10; }
-  .toast[data-kind='error'] { background: var(--danger); color: #fff; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: min(560px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px;
+    padding: 11px 12px 11px 18px; border-radius: 99px; background: var(--ink); color: var(--bg); font-size: 14px; box-shadow: 0 10px 30px -12px rgb(0 0 0 / .35); animation: toast .35s var(--spring); z-index: 10; }
+  .toast[data-kind='error'] { background: var(--danger); color: #fff; border-radius: 18px; }
   .toast button { border: 0; background: none; color: inherit; font-size: 18px; cursor: pointer; opacity: .7; }
-  @keyframes pop { from { opacity: 0; transform: translate(-50%, 12px) scale(.96); } }
+  @keyframes toast { from { opacity: 0; transform: translate(-50%, 12px) scale(.96); } }
 </style>

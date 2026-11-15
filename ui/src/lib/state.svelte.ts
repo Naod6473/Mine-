@@ -28,6 +28,10 @@ class AppState {
   options = $state<Options>({ ...DEFAULT_OPTIONS, ...load<Partial<Options>>(K.options, {}) });
   presets = $state<Preset[]>(load(K.presets, []));
   tab = $state<'mine' | 'history'>('mine');
+  submitting = $state(false);
+  /** Vrai pendant ~2 s après un téléchargement réussi : la mouette crie « Mine ! ». */
+  celebrate = $state(false);
+  private celebrateTimer: ReturnType<typeof setTimeout> | undefined;
   toast = $state<{ text: string; kind: 'info' | 'error' } | null>(null);
   private socket: Socket | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -40,6 +44,12 @@ class AppState {
   });
 
   activeCount = $derived(Object.values(this.queue).filter((d) => d.status !== 'pending').length);
+
+  /** Le téléchargement mis en avant sous la mouette : celui qui avance, sinon le plus récent. */
+  lead = $derived.by(() => {
+    const active = Object.values(this.queue).filter((d) => d.status !== 'pending').sort((a, b) => b.timestamp - a.timestamp);
+    return active.find((d) => d.status === 'downloading' && d.percent != null) ?? active[0] ?? null;
+  });
 
   connect() {
     const path = new URL('socket.io', document.baseURI).pathname;
@@ -70,6 +80,11 @@ class AppState {
       delete this.queue[d.url];
       this.done[d.url] = d;
       this.record(d);
+      if (d.status === 'finished') {
+        this.celebrate = true;
+        clearTimeout(this.celebrateTimer);
+        this.celebrateTimer = setTimeout(() => (this.celebrate = false), 2200);
+      }
     });
     s.on('canceled', (raw: string) => { delete this.queue[parse<string>(raw)]; });
     s.on('cleared', (raw: string) => { delete this.done[parse<string>(raw)]; });
@@ -152,6 +167,11 @@ class AppState {
   }
 
   async add(url: string): Promise<boolean> {
+    this.submitting = true;
+    try { return await this.addInner(url); } finally { this.submitting = false; }
+  }
+
+  private async addInner(url: string): Promise<boolean> {
     const body = this.payload(url, this.mode === 'advanced');
     try {
       const r = await post('add', body);

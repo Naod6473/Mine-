@@ -122,7 +122,7 @@
       {#if app.config?.CUSTOM_DIRS}
         <label>
           <span class="lbl">Dossier</span>
-          <input list="mine-dirs" bind:value={app.options.folder} placeholder="Racine des téléchargements" />
+          <input list="mine-dirs" bind:value={app.options.folder} placeholder="Racine" />
           <datalist id="mine-dirs">
             {#each dirs.filter(Boolean) as d (d)}<option value={d}></option>{/each}
           </datalist>
@@ -193,36 +193,35 @@
 </section>
 
 <style>
-  .panel { margin-top: 16px; padding: 20px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line);
-    box-shadow: var(--shadow-sm); display: grid; gap: 18px; animation: unfold .35s var(--spring); transform-origin: top; }
-  @keyframes unfold { from { opacity: 0; transform: translateY(-6px) scaleY(.97); } }
+  .panel { margin-top: 20px; padding: 22px 0 0; border-top: 1px solid var(--line); display: grid; gap: 20px; animation: unfold .35s var(--ease); }
+  @keyframes unfold { from { opacity: 0; transform: translateY(-4px); } }
   .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-  label { display: grid; gap: 6px; }
-  .lbl { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px 20px; }
+  label { display: grid; gap: 4px; }
+  .lbl { font-size: 12px; font-weight: 500; color: var(--muted); }
   .row > .lbl { min-width: 64px; }
-  select, input:not([type='checkbox']) { height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 0 10px; outline: none; min-width: 0; }
-  select:focus, input:focus { border-color: var(--ink); }
-  .num { width: 76px; }
-  .seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 12px; background: var(--chip); }
-  .seg button { border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); padding: 7px 12px; border-radius: 9px; cursor: pointer; }
-  .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
-  .checks { gap: 20px; }
+  select, input:not([type='checkbox']) { height: 34px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; font: 500 14px var(--body); padding: 0 2px; outline: none; min-width: 0; }
+  select:focus, input:not([type='checkbox']):focus { border-bottom-color: var(--ink); }
+  input::placeholder { color: var(--muted); opacity: .7; }
+  .num { width: 64px; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 99px; background: var(--wash); }
+  .seg button { border: 0; background: none; font: 500 13px var(--body); color: var(--muted); padding: 6px 13px; border-radius: 99px; cursor: pointer; }
+  .seg button.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .06); }
+  .checks { gap: 22px; }
   .check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
-  .check input { accent-color: var(--accent); width: 16px; height: 16px; }
-  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
-  .cookies { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }
-  .preset { display: flex; gap: 8px; }
-  .preset input { width: 170px; }
-  .ghost { height: 38px; border-radius: 10px; border: 1px solid var(--line); background: none; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; padding: 0 12px; cursor: pointer; }
-  .ghost:disabled { opacity: .4; cursor: default; }
-  .link { border: 0; background: none; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); cursor: pointer; padding: 0; }
-  .link:hover { text-decoration-color: var(--ink); }
+  .check input { accent-color: var(--ink); width: 15px; height: 15px; }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; }
+  .cookies { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+  .preset { display: flex; gap: 10px; align-items: center; }
+  .preset input { width: 160px; }
+  .ghost { border: 0; background: none; color: var(--ink); font: 600 13px var(--body); cursor: pointer; padding: 0; }
+  .ghost:disabled { opacity: .35; cursor: default; }
+  .link { border: 0; background: none; color: var(--ink); font: 600 13px var(--body); cursor: pointer; padding: 0; }
+  .link:hover { text-decoration: underline; text-underline-offset: 3px; }
   .reset { justify-self: start; color: var(--muted); font-weight: 500; }
-  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { display: inline-flex; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
-  .chip button { border: 0; background: none; color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
-  .chip-main { padding: 5px 4px 5px 12px; }
-  .chip-x { padding: 5px 10px 5px 6px; color: var(--muted) !important; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .chip { display: inline-flex; align-items: baseline; gap: 2px; }
+  .chip button { border: 0; background: none; font: 500 13px var(--body); cursor: pointer; padding: 0; }
+  .chip-x { color: var(--muted) !important; padding: 0 4px !important; }
   .muted { color: var(--muted); font-size: 13px; }
 </style>

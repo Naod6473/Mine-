@@ -2,7 +2,6 @@
   import { app } from '../lib/state.svelte';
   import { extOf, humanSize, label, relativeDate } from '../lib/labels';
   import type { HistoryEntry } from '../lib/types';
-  import GullMark from './GullMark.svelte';
 
   let q = $state('');
   let filter = $state<'all' | 'ok' | 'error'>('all');
@@ -59,7 +58,7 @@
 
   {#if app.history.length === 0}
     <div class="empty">
-      <GullMark size={56} />
+      <img src="gull-head.png" alt="" width="56" height="56" />
       <p>Rien dans le bec pour l'instant.</p>
       <small>Les téléchargements terminés apparaissent ici, dans ce navigateur uniquement.</small>
     </div>
@@ -72,7 +71,7 @@
         <li class:err={h.status === 'error'}>
           <div class="thumb">
             {#if h.thumbnail}<img src={h.thumbnail} alt="" loading="lazy" referrerpolicy="no-referrer" onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />{/if}
-            <span>{h.site.slice(0, 1).toUpperCase()}</span>
+            <img class="ph" src="gull-head.png" alt="" />
           </div>
           <div class="info">
             <a class="title" href={h.url} target="_blank" rel="noreferrer" title={h.title}>{h.title}</a>
@@ -104,40 +103,41 @@
 </section>
 
 <style>
-  .history { display: grid; gap: 16px; }
-  .tools { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  .search { flex: 1; min-width: 200px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 15px; padding: 0 14px; outline: none; }
-  .search:focus { border-color: var(--ink); }
-  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--chip); }
-  .seg button { border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); padding: 7px 12px; border-radius: 9px; cursor: pointer; }
-  .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .history { display: grid; gap: 18px; }
+  .tools { display: flex; gap: 12px 18px; flex-wrap: wrap; align-items: center; }
+  .search { flex: 1; min-width: 200px; height: 40px; border: 0; border-bottom: 1px solid var(--line); background: none; font: 15px var(--body); padding: 0 2px; outline: none; }
+  .search:focus { border-bottom-color: var(--ink); }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 99px; background: var(--wash); }
+  .seg button { border: 0; background: none; font: 500 13px var(--body); color: var(--muted); padding: 6px 13px; border-radius: 99px; cursor: pointer; }
+  .seg button.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .06); }
   .seg small { font-weight: 500; opacity: .7; margin-left: 2px; }
-  ul { list-style: none; margin: 0; padding: 0; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
-  li { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); }
-  li:first-child { border-top: 0; }
-  .thumb { position: relative; width: 64px; height: 44px; border-radius: 8px; overflow: hidden; background: var(--chip); display: grid; place-items: center; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+  li:last-child { border-bottom: 1px solid var(--line); }
+  .thumb { position: relative; width: 56px; height: 38px; border-radius: 8px; overflow: hidden; background: var(--wash); display: grid; place-items: center; }
   .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .thumb span { font-weight: 700; color: var(--muted); }
-  .info { min-width: 0; display: grid; gap: 3px; }
-  .title { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .thumb .ph { position: static; width: 26px; height: 26px; opacity: .55; filter: grayscale(.4); }
+  .info { min-width: 0; display: grid; gap: 2px; }
+  .title { color: var(--ink); text-decoration: none; font-weight: 500; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .title:hover { text-decoration: underline; text-underline-offset: 3px; }
   .meta { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .error { font-size: 12.5px; color: var(--danger); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .actions { display: flex; gap: 4px; }
-  .actions a, .actions button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 8px; border-radius: 8px; cursor: pointer; text-decoration: none; }
-  .actions a:hover, .actions button:hover { color: var(--ink); background: var(--chip); }
+  .actions { display: flex; gap: 14px; }
+  .actions a, .actions button { border: 0; background: none; color: var(--muted); font: 500 13px var(--body); padding: 0; cursor: pointer; text-decoration: none; }
+  .actions a:hover, .actions button:hover { color: var(--ink); }
   .actions .x { font-size: 18px; line-height: 1; }
-  .empty { display: grid; justify-items: center; gap: 8px; padding: 56px 16px; text-align: center; color: var(--muted); }
-  .empty p { margin: 8px 0 0; font-weight: 600; color: var(--ink); }
+  .empty { display: grid; justify-items: center; gap: 6px; padding: 56px 16px; text-align: center; color: var(--muted); }
+  .empty img { border-radius: 14px; }
+  .empty p { margin: 8px 0 0; font-family: var(--display); font-weight: 500; font-size: 18px; color: var(--ink); }
   footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
-  .links { display: flex; gap: 14px; }
-  .links button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0; }
+  .links { display: flex; gap: 16px; }
+  .links button { border: 0; background: none; color: var(--muted); font: 500 12.5px var(--body); cursor: pointer; padding: 0; }
   .links button:hover:not(:disabled) { color: var(--ink); }
   .links button:disabled { opacity: .4; cursor: default; }
   .links .danger { color: var(--danger); }
   @media (max-width: 560px) {
     li { grid-template-columns: 1fr auto; }
     .thumb { display: none; }
-    .actions { flex-direction: column; gap: 0; align-items: flex-end; }
+    .actions { flex-direction: column; gap: 4px; align-items: flex-end; }
   }
 </style>
