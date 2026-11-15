@@ -303,8 +303,8 @@ class AppState {
   }
 }
 
-export type Tab = 'mine' | 'history' | 'terms' | 'privacy';
-const HASH: Record<Exclude<Tab, 'mine'>, string> = { history: 'historique', terms: 'conditions', privacy: 'confidentialite' };
+export type Tab = 'mine' | 'history' | 'terms' | 'privacy' | 'sites';
+const HASH: Record<Exclude<Tab, 'mine'>, string> = { history: 'historique', terms: 'conditions', privacy: 'confidentialite', sites: 'sites' };
 function tabFromHash(): Tab {
   const h = location.hash.slice(1);
   return (Object.entries(HASH).find(([, v]) => v === h)?.[0] as Tab) ?? 'mine';

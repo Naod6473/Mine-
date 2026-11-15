@@ -1533,6 +1533,47 @@ async def take(request):
         await dqueue.clear([url], delete_files=True)
     return response
 
+_SITES_CACHE = None
+# Noms d'affichage des sites les plus connus (yt-dlp les écrit souvent en minuscules).
+_PRETTY_SITE_NAMES = {
+    'youtube': 'YouTube', 'dailymotion': 'Dailymotion', 'facebook': 'Facebook', 'francetv': 'France TV',
+    'mixcloud': 'Mixcloud', 'soundcloud': 'SoundCloud', 'tiktok': 'TikTok', 'twitch': 'Twitch',
+    'twitter': 'X (Twitter)', 'vimeo': 'Vimeo', 'bilibili': 'Bilibili', 'instagram': 'Instagram',
+    'reddit': 'Reddit', 'bandcamp': 'Bandcamp', 'bluesky': 'Bluesky', 'arte': 'Arte',
+}
+
+
+def supported_sites() -> list:
+    """Les sites que yt-dlp sait lire, regroupés par site (un site peut avoir
+    plusieurs extracteurs : vidéo, playlist, chaîne…)."""
+    global _SITES_CACHE
+    if _SITES_CACHE is None:
+        from yt_dlp.extractor import gen_extractor_classes
+        sites = {}
+        for ie in gen_extractor_classes():
+            name = getattr(ie, 'IE_NAME', '') or ''
+            desc = getattr(ie, 'IE_DESC', None)
+            if desc is False or name == 'generic' or not ie.working():
+                continue
+            base, _, kind = name.partition(':')
+            key = base.lower()
+            entry = sites.setdefault(key, {'name': base, 'kinds': [], 'cookies': False})
+            if not kind and isinstance(desc, str) and len(desc) < 40 and ';' not in desc:
+                entry['name'] = desc
+            if kind:
+                entry['kinds'].append(kind)
+            if isinstance(desc, str) and 'cookies' in desc.lower():
+                entry['cookies'] = True
+        for key, entry in sites.items():
+            entry['name'] = _PRETTY_SITE_NAMES.get(key, entry['name'][:1].upper() + entry['name'][1:])
+        _SITES_CACHE = sorted(sites.values(), key=lambda e: e['name'].lower())
+    return _SITES_CACHE
+
+
+@routes.get(config.URL_PREFIX + 'sites')
+async def sites(request):
+    return web.json_response(supported_sites(), headers={'Cache-Control': 'public, max-age=3600'})
+
 @routes.get(config.URL_PREFIX + 'version')
 async def version(request):
     return web.json_response({

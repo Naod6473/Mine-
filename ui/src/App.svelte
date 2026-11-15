@@ -8,6 +8,7 @@
   import History from './components/History.svelte';
   import Splash from './components/Splash.svelte';
   import Legal from './components/Legal.svelte';
+  import Sites from './components/Sites.svelte';
   import { theme } from './lib/theme.svelte';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
@@ -85,12 +86,16 @@
     {/if}
   {:else if app.tab === 'history'}
     <History />
+  {:else if app.tab === 'sites'}
+    <Sites />
   {:else}
     <Legal page={app.tab} />
   {/if}
 </main>
 
 <footer class="foot">
+  <a href="#sites" onclick={(e) => { e.preventDefault(); app.go('sites'); }}>{t('sites')}</a>
+  <span>·</span>
   <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>{t('terms')}</a>
   <span>·</span>
   <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>{t('privacy')}</a>
@@ -135,7 +140,7 @@
   h2 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
   .link { border: 0; background: none; color: var(--muted); font: 500 13px var(--body); cursor: pointer; padding: 0; }
   .link:hover { color: var(--ink); }
-  main:has(:global(.history)) { padding-top: 36px; max-width: 720px; }
+  main:has(:global(.history)), main:has(:global(.sites)) { padding-top: 36px; max-width: 720px; }
   .offline { max-width: 600px; margin: 14px auto 0; padding: 8px 14px; border-radius: 99px; background: color-mix(in oklab, var(--danger) 10%, var(--bg)); color: var(--danger); font-size: 13px; font-weight: 500; text-align: center; }
   .foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; padding: 28px 20px 32px; font-size: 12px; color: var(--muted); }
   .foot a { color: inherit; }
