@@ -85,7 +85,7 @@
   .logo { height: calc(100% - 44px); width: auto; max-width: 100%; }
   .logo.hidden { opacity: 0; transition-duration: .5s; }
   .perch .logo { top: calc(50% - 20px); transform: translate(-50%, -50%); }
-  .gull { width: clamp(190px, 30vh, 250px); height: auto; opacity: 0; transform: translate(-50%, -40%) scale(.9); }
+  .gull { width: clamp(190px, 30vh, 250px); height: auto; opacity: 0; pointer-events: none; transform: translate(-50%, -40%) scale(.9); }
   .flying .perch { opacity: 0; transform: translateY(-6%) scale(.9); pointer-events: none; }
   .flying .gull { opacity: 1; transform: translate(-50%, -50%); animation: bob 2.4s ease-in-out .4s infinite; }
   @keyframes bob { 50% { transform: translate(-50%, calc(-50% - 9px)); } }
