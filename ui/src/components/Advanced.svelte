@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n.svelte';
   import { app } from '../lib/state.svelte';
   import { label } from '../lib/labels';
   import type { TypeOption } from '../lib/types';
@@ -42,13 +43,13 @@
     if (!file) return;
     const fd = new FormData(); fd.append('cookies', file);
     const r = await fetch('upload-cookies', { method: 'POST', body: fd }).catch(() => null);
-    app.notify(r?.ok ? 'Cookies enregistrés.' : 'Pas à toi. Le fichier de cookies a été refusé.', r?.ok ? 'info' : 'error');
+    app.notify(r?.ok ? t('cookiesSaved') : t('cookiesRefused'), r?.ok ? 'info' : 'error');
     if (cookieInput) cookieInput.value = '';
     refreshCookies();
   }
   async function deleteCookies() {
     await fetch('delete-cookies', { method: 'POST' }).catch(() => null);
-    app.notify('Cookies supprimés.');
+    app.notify(t('cookiesRemoved'));
     refreshCookies();
   }
   function savePreset(e: Event) {
@@ -56,16 +57,16 @@
     const n = presetName.trim();
     if (!n) return;
     app.addPreset(n); presetName = '';
-    app.notify(`Préréglage « ${n} » enregistré.`);
+    app.notify(t('presetSaved', n));
   }
 </script>
 
-<section class="panel" aria-label="Options avancées">
+<section class="panel" aria-label={t('advanced')}>
   {#if !app.catalog}
-    <p class="muted">Chargement des options…</p>
+    <p class="muted">{t('loadingOptions')}</p>
   {:else}
     <div class="row">
-      <span class="lbl">Type</span>
+      <span class="lbl">{t('type')}</span>
       <div class="seg">
         {#each types as t (t.id)}
           <button class:on={t.id === app.options.download_type} onclick={() => setType(t.id)}>{label(t.id, t.text)}</button>
@@ -75,14 +76,14 @@
 
     <div class="grid">
       <label>
-        <span class="lbl">Format</span>
+        <span class="lbl">{t('format')}</span>
         <select value={app.options.format} onchange={(e) => setFormat(e.currentTarget.value)}>
           {#each type?.format.options ?? [] as f (f.id)}<option value={f.id}>{label(f.id, f.text)}</option>{/each}
         </select>
       </label>
       {#if format?.quality && format.quality.options.length > 1}
         <label>
-          <span class="lbl">Qualité</span>
+          <span class="lbl">{t('quality')}</span>
           <select bind:value={app.options.quality}>
             {#each format.quality.options as q (q.id)}<option value={q.id}>{label(q.id, q.text, 'quality')}</option>{/each}
           </select>
@@ -90,7 +91,7 @@
       {/if}
       {#if type?.codec}
         <label>
-          <span class="lbl">Codec</span>
+          <span class="lbl">{t('codec')}</span>
           <select bind:value={app.options.codec}>
             {#each type.codec.options as c (c.id)}<option value={c.id}>{label(c.id, c.text)}</option>{/each}
           </select>
@@ -98,7 +99,7 @@
       {/if}
       {#if type?.audio_tags}
         <label>
-          <span class="lbl">Tags</span>
+          <span class="lbl">{t('tags')}</span>
           <select bind:value={app.options.audio_tags}>
             {#each type.audio_tags.options as c (c.id)}<option value={c.id}>{label(c.id, c.text)}</option>{/each}
           </select>
@@ -106,14 +107,14 @@
       {/if}
       {#if type?.subtitle_language}
         <label>
-          <span class="lbl">Langue</span>
+          <span class="lbl">{t('language')}</span>
           <input list="mine-langs" bind:value={app.options.subtitle_language} />
           <datalist id="mine-langs">
             {#each type.subtitle_language.options as c (c.id)}<option value={c.id}>{label(c.id, c.text, 'subtitle_language')}</option>{/each}
           </datalist>
         </label>
         <label>
-          <span class="lbl">Sous-titres</span>
+          <span class="lbl">{t('subtitles')}</span>
           <select bind:value={app.options.subtitle_mode}>
             {#each type.subtitle_mode?.options ?? [] as c (c.id)}<option value={c.id}>{label(c.id, c.text)}</option>{/each}
           </select>
@@ -121,8 +122,8 @@
       {/if}
       {#if app.config?.CUSTOM_DIRS}
         <label>
-          <span class="lbl">Dossier</span>
-          <input list="mine-dirs" bind:value={app.options.folder} placeholder="Racine" />
+          <span class="lbl">{t('folder')}</span>
+          <input list="mine-dirs" bind:value={app.options.folder} placeholder={t('root')} />
           <datalist id="mine-dirs">
             {#each dirs.filter(Boolean) as d (d)}<option value={d}></option>{/each}
           </datalist>
@@ -131,50 +132,50 @@
     </div>
 
     <div class="row">
-      <span class="lbl">Playlist</span>
+      <span class="lbl">{t('playlist')}</span>
       <div class="seg">
-        <button class:on={app.options.playlist === 'all'} onclick={() => (app.options.playlist = 'all')}>Tout</button>
-        <button class:on={app.options.playlist === 'single'} onclick={() => (app.options.playlist = 'single')}>Cette vidéo</button>
-        <button class:on={app.options.playlist === 'limit'} onclick={() => (app.options.playlist = 'limit')}>Limiter</button>
+        <button class:on={app.options.playlist === 'all'} onclick={() => (app.options.playlist = 'all')}>{t('all')}</button>
+        <button class:on={app.options.playlist === 'single'} onclick={() => (app.options.playlist = 'single')}>{t('thisVideo')}</button>
+        <button class:on={app.options.playlist === 'limit'} onclick={() => (app.options.playlist = 'limit')}>{t('limit')}</button>
       </div>
       {#if app.options.playlist === 'limit'}
-        <input class="num" type="number" min="1" bind:value={app.options.playlist_item_limit} aria-label="Nombre d'éléments" />
-        <span class="muted">premiers éléments</span>
+        <input class="num" type="number" min="1" bind:value={app.options.playlist_item_limit} aria-label={t('itemCount')} />
+        <span class="muted">{t('firstItems')}</span>
       {/if}
     </div>
 
     {#if isMedia}
       <div class="grid">
         <label>
-          <span class="lbl">Début de l'extrait</span>
+          <span class="lbl">{t('clipStart')}</span>
           <input bind:value={app.options.clip_start} placeholder="0:00" inputmode="numeric" />
         </label>
         <label>
-          <span class="lbl">Fin de l'extrait</span>
-          <input bind:value={app.options.clip_end} placeholder="fin" inputmode="numeric" />
+          <span class="lbl">{t('clipEnd')}</span>
+          <input bind:value={app.options.clip_end} placeholder={t('end')} inputmode="numeric" />
         </label>
         <label>
-          <span class="lbl">Préfixe du nom</span>
-          <input bind:value={app.options.custom_name_prefix} placeholder="aucun" />
+          <span class="lbl">{t('prefix')}</span>
+          <input bind:value={app.options.custom_name_prefix} placeholder={t('none')} />
         </label>
       </div>
       <div class="row checks">
-        <label class="check"><input type="checkbox" bind:checked={app.options.split_by_chapters} /> Un fichier par chapitre</label>
-        <label class="check"><input type="checkbox" bind:checked={app.options.sponsorblock} /> Sauter les passages sponsorisés</label>
+        <label class="check"><input type="checkbox" bind:checked={app.options.split_by_chapters} /> {t('chapters')}</label>
+        <label class="check"><input type="checkbox" bind:checked={app.options.sponsorblock} /> {t('sponsor')}</label>
       </div>
     {/if}
 
     <div class="foot">
       <div class="cookies">
-        <span class="lbl">Cookies</span>
-        <span class="muted">{cookies ? 'Fichier en place' : cookies === false ? 'Aucun' : '…'}</span>
-        <button class="link" onclick={() => cookieInput?.click()}>{cookies ? 'Remplacer' : 'Envoyer un fichier'}</button>
-        {#if cookies}<button class="link" onclick={deleteCookies}>Supprimer</button>{/if}
+        <span class="lbl">{t('cookies')}</span>
+        <span class="muted">{cookies ? t('cookieSet') : cookies === false ? t('cookieNone') : '…'}</span>
+        <button class="link" onclick={() => cookieInput?.click()}>{cookies ? t('replace') : t('sendFile')}</button>
+        {#if cookies}<button class="link" onclick={deleteCookies}>{t('remove')}</button>{/if}
         <input bind:this={cookieInput} type="file" accept=".txt,text/plain" hidden onchange={uploadCookies} />
       </div>
       <form class="preset" onsubmit={savePreset}>
-        <input bind:value={presetName} placeholder="Nom du préréglage" aria-label="Nom du préréglage" />
-        <button class="ghost" disabled={!presetName.trim()}>Enregistrer</button>
+        <input bind:value={presetName} placeholder={t('presetName')} aria-label={t('presetName')} />
+        <button class="ghost" disabled={!presetName.trim()}>{t('save')}</button>
       </form>
     </div>
 
@@ -183,12 +184,12 @@
         {#each app.presets as p (p.name)}
           <span class="chip">
             <button class="chip-main" onclick={() => app.applyPreset(p)}>{p.name}</button>
-            <button class="chip-x" onclick={() => app.removePreset(p.name)} aria-label="Supprimer {p.name}">×</button>
+            <button class="chip-x" onclick={() => app.removePreset(p.name)} aria-label={t('removeX', p.name)}>×</button>
           </span>
         {/each}
       </div>
     {/if}
-    <button class="link reset" onclick={() => app.resetOptions()}>Revenir aux réglages par défaut</button>
+    <button class="link reset" onclick={() => app.resetOptions()}>{t('reset')}</button>
   {/if}
 </section>
 

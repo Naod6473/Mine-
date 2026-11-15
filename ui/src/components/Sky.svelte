@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n.svelte';
   // La mouette n'apparaît que pendant un téléchargement : elle s'envole, bat des ailes et annonce l'avancement.
   import { app } from '../lib/state.svelte';
 
@@ -7,12 +8,12 @@
   const others = $derived(Math.max(0, app.activeCount - 1));
   const caption = $derived.by(() => {
     if (lead) {
-      if (lead.status === 'downloading' && lead.percent != null) return `Mine… ${Math.floor(lead.percent)} %`;
-      if (lead.status === 'postprocessing') return 'Mine… presque';
-      return 'Mine ?';
+      if (lead.status === 'downloading' && lead.percent != null) return t('pct', Math.floor(lead.percent));
+      if (lead.status === 'postprocessing') return t('almost');
+      return t('ask');
     }
-    if (app.submitting) return 'Mine ?';
-    if (app.celebrate) return 'Mine !';
+    if (app.submitting) return t('ask');
+    if (app.celebrate) return t('cry');
     return '';
   });
   const pct = $derived(lead?.status === 'downloading' && lead.percent != null ? lead.percent : lead?.status === 'postprocessing' ? 100 : null);
@@ -21,8 +22,8 @@
 <div class="sky" class:flying aria-live="polite">
   <img class="gull" src="gull-fly.webp" alt="" width="360" height="229" />
   <div class="caption">
-    {#key caption === 'Mine !'}
-      <span class:pop={caption === 'Mine !'} class:done={caption === 'Mine !'}>{caption}</span>
+    {#key caption === t('cry')}
+      <span class:pop={caption === t('cry')} class:done={caption === t('cry')}>{caption}</span>
     {/key}
     {#if others && lead}<small>+{others} en cours</small>{/if}
   </div>

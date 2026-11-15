@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n.svelte';
   import { app } from '../lib/state.svelte';
   import { extOf, humanSize, label, relativeDate } from '../lib/labels';
   import type { HistoryEntry } from '../lib/types';
@@ -17,14 +18,14 @@
   const counts = $derived({ ok: app.history.filter((h) => h.status === 'ok').length, error: app.history.filter((h) => h.status === 'error').length });
 
   async function copy(h: HistoryEntry) {
-    try { await navigator.clipboard.writeText(h.url); app.notify('Lien copié.'); }
-    catch { app.notify('Copie impossible ici : le lien est ' + h.url); }
+    try { await navigator.clipboard.writeText(h.url); app.notify(t('copied')); }
+    catch { app.notify(t('copyFailed', h.url)); }
   }
   function exportJson() {
     const blob = new Blob([JSON.stringify(app.history, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `mine-historique-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `${t('exportName')}-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
@@ -36,8 +37,8 @@
       if (!Array.isArray(data)) throw new Error();
       const before = app.history.length;
       app.importHistory(data);
-      app.notify(`${app.history.length - before} entrée(s) ajoutée(s).`);
-    } catch { app.notify('Pas à toi. Ce fichier n’est pas un historique Mine!?.', 'error'); }
+      app.notify(t('imported', app.history.length - before));
+    } catch { app.notify(t('badImport'), 'error'); }
     if (fileInput) fileInput.value = '';
   }
   function clearAll() {
@@ -48,22 +49,22 @@
 
 <section class="history">
   <div class="tools">
-    <input class="search" type="search" bind:value={q} placeholder="Rechercher un titre ou un site" aria-label="Rechercher dans l'historique" />
-    <div class="seg" role="radiogroup" aria-label="Filtrer">
-      <button role="radio" aria-checked={filter === 'all'} class:on={filter === 'all'} onclick={() => (filter = 'all')}>Tout <small>{app.history.length}</small></button>
-      <button role="radio" aria-checked={filter === 'ok'} class:on={filter === 'ok'} onclick={() => (filter = 'ok')}>Réussis <small>{counts.ok}</small></button>
-      <button role="radio" aria-checked={filter === 'error'} class:on={filter === 'error'} onclick={() => (filter = 'error')}>Échoués <small>{counts.error}</small></button>
+    <input class="search" type="search" bind:value={q} placeholder={t('search')} aria-label={t('searchLabel')} />
+    <div class="seg" role="radiogroup" aria-label={t('filter')}>
+      <button role="radio" aria-checked={filter === 'all'} class:on={filter === 'all'} onclick={() => (filter = 'all')}>{t('all')} <small>{app.history.length}</small></button>
+      <button role="radio" aria-checked={filter === 'ok'} class:on={filter === 'ok'} onclick={() => (filter = 'ok')}>{t('ok')} <small>{counts.ok}</small></button>
+      <button role="radio" aria-checked={filter === 'error'} class:on={filter === 'error'} onclick={() => (filter = 'error')}>{t('failed')} <small>{counts.error}</small></button>
     </div>
   </div>
 
   {#if app.history.length === 0}
     <div class="empty">
       <img src="gull-head.png" alt="" width="56" height="56" />
-      <p>Rien dans le bec pour l'instant.</p>
-      <small>Les téléchargements terminés apparaissent ici, dans ce navigateur uniquement.</small>
+      <p>{t('emptyTitle')}</p>
+      <small>{t('emptyText')}</small>
     </div>
   {:else if list.length === 0}
-    <div class="empty"><p>Rien ne correspond.</p></div>
+    <div class="empty"><p>{t('noMatch')}</p></div>
   {:else}
     <ul>
       {#each list as h (h.key)}
@@ -78,13 +79,13 @@
             <span class="meta">
               {[h.site, relativeDate(h.date), extOf(h.filename) || label(h.format, h.format.toUpperCase()), humanSize(h.size), h.folder].filter(Boolean).join(' · ')}
             </span>
-            {#if h.error}<span class="error" title={h.error}>Pas à toi. {h.error}</span>{/if}
+            {#if h.error}<span class="error" title={h.error}>{t('nope')} {h.error}</span>{/if}
           </div>
           <div class="actions">
-            {#if href}<a {href} download={h.filename ?? ''} title="Récupérer le fichier">Fichier</a>{/if}
-            <button onclick={() => app.again(h)} title="Relancer avec les mêmes options">Relancer</button>
-            <button onclick={() => copy(h)} title="Copier le lien d'origine">Copier</button>
-            <button class="x" onclick={() => app.removeHistory(h.key)} aria-label="Retirer de l'historique" title="Retirer">×</button>
+            {#if href}<a {href} download={h.filename ?? ''} title={t('fileTitle')}>{t('file')}</a>{/if}
+            <button onclick={() => app.again(h)} title={t('againTitle')}>{t('again')}</button>
+            <button onclick={() => copy(h)} title={t('copyTitle')}>{t('copy')}</button>
+            <button class="x" onclick={() => app.removeHistory(h.key)} aria-label={t('removeHistory')} title={t('removeShort')}>×</button>
           </div>
         </li>
       {/each}
@@ -92,11 +93,11 @@
   {/if}
 
   <footer>
-    <span>Gardé dans ce navigateur, 500 entrées maximum.</span>
+    <span>{t('kept')}</span>
     <span class="links">
-      <button onclick={exportJson} disabled={!app.history.length}>Exporter</button>
-      <button onclick={() => fileInput?.click()}>Importer</button>
-      <button class:danger={confirmClear} onclick={clearAll} disabled={!app.history.length}>{confirmClear ? 'Sûr ? Cliquer encore' : 'Tout effacer'}</button>
+      <button onclick={exportJson} disabled={!app.history.length}>{t('export')}</button>
+      <button onclick={() => fileInput?.click()}>{t('import')}</button>
+      <button class:danger={confirmClear} onclick={clearAll} disabled={!app.history.length}>{confirmClear ? t('sure') : t('clearAll')}</button>
     </span>
     <input bind:this={fileInput} type="file" accept="application/json,.json" hidden onchange={importJson} />
   </footer>

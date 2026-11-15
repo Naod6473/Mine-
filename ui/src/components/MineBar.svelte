@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n.svelte';
   import { untrack } from 'svelte';
   import { app, isUrl } from '../lib/state.svelte';
   import { label } from '../lib/labels';
@@ -32,18 +33,18 @@
 
 <form class="bar" class:invalid={url.length > 0 && !valid} onsubmit={submit} autocomplete="off">
   <input bind:this={input} bind:value={url} type="url" inputmode="url" spellcheck="false"
-    aria-label="Lien à télécharger" enterkeyhint="go" />
+    aria-label={t('linkLabel')} enterkeyhint="go" />
   {#if url}
-    <button type="button" class="clear" onclick={() => { url = ''; input?.focus(); }} aria-label="Vider le champ">×</button>
+    <button type="button" class="clear" onclick={() => { url = ''; input?.focus(); }} aria-label={t('clear')}>×</button>
   {/if}
   <button class="mine" type="submit" disabled={!valid || app.submitting} aria-busy={app.submitting}>
-    {app.submitting ? 'Mine…' : 'Mine !'}
+    {app.submitting ? t('busy') : t('cry')}
   </button>
 </form>
 
 <div class="under">
   <button class="textbtn" onclick={() => app.setMode(open ? 'simple' : 'advanced')} aria-expanded={open}>
-    {open ? 'Masquer les options' : 'Options'}
+    {open ? t('hideOptions') : t('options')}
   </button>
   {#if !open && (app.options.download_type !== 'video' || app.options.folder || app.options.quality !== 'best')}
     <span class="summary">· {summary()}</span>
@@ -53,7 +54,7 @@
 {#if open}
   <Advanced />
 {:else if app.presets.length}
-  <div class="chips" aria-label="Préréglages">
+  <div class="chips" aria-label={t('presets')}>
     {#each app.presets as p (p.name)}
       <button class="textbtn" onclick={() => { app.applyPreset(p); }}>{p.name}</button>
     {/each}

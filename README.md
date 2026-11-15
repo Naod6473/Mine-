@@ -17,6 +17,7 @@ Mine!? télécharge des vidéos, de la musique, des sous-titres ou des miniature
 - **Options** (sous le champ) : type, format, qualité, codec, dossier, playlist, extrait, sous-titres, cookies et préréglages. Tes choix sont mémorisés dans le navigateur.
 - **Historique** : il est gardé dans le navigateur (500 entrées maximum). Tu peux y chercher, filtrer, relancer un téléchargement, copier le lien, ou exporter et importer l'historique en JSON.
 - **Suivi en direct** : la mouette s'envole pendant le téléchargement et affiche l'avancement, avec la vitesse et le temps restant pour chaque fichier.
+- **Français et anglais** : langue du navigateur, ou au choix avec le bouton FR / EN. En français, la mouette crie « À moi ! », en anglais « Mine! ».
 - **Jour et nuit** : automatique, ou au choix avec le bouton soleil/lune (fondu doux), utilisable au téléphone, installable comme une app (menu « Partager » sur Android).
 
 ## Installation sur Proxmox VE

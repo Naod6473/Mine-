@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { i18n, t } from './lib/i18n.svelte';
   import { onMount } from 'svelte';
   import { app, extractUrl } from './lib/state.svelte';
   import MineBar from './components/MineBar.svelte';
@@ -18,7 +19,7 @@
 
   let version = $state('');
   const finishedCount = $derived(app.cards.filter(([, d]) => d.status === 'finished').length);
-  const heading = $derived(app.activeCount >= 3 ? 'Mine ! Mine ! Mine !' : app.activeCount ? 'En cours' : 'Récemment');
+  const heading = $derived(app.activeCount >= 3 ? t('chorus') : app.activeCount ? t('active') : t('recent'));
 
   onMount(() => {
     app.connect();
@@ -31,20 +32,21 @@
 </script>
 
 <svelte:head>
-  <title>{app.activeCount ? `(${app.activeCount}) Mine… · Mine!?` : 'Mine!?'}</title>
+  <title>{app.activeCount ? t('titleBusy', app.activeCount) : 'Mine!?'}</title>
 </svelte:head>
 
 <header>
-  <button class="brand" onclick={() => (app.go('mine'))} aria-label="Mine!?, accueil">
+  <button class="brand" onclick={() => (app.go('mine'))} aria-label={t('home')}>
     <img src="gull-head.png" alt="" width="30" height="30" />
     <span>Mine!?</span>
   </button>
-  <nav aria-label="Sections">
+  <nav aria-label={t('sections')}>
     <button class:on={app.tab === 'mine'} onclick={() => (app.go('mine'))} aria-current={app.tab === 'mine' ? 'page' : undefined}>
-      Mine{#if app.activeCount}<span class="badge">{app.activeCount}</span>{/if}
+      {t('tabMine')}{#if app.activeCount}<span class="badge">{app.activeCount}</span>{/if}
     </button>
-    <button class:on={app.tab === 'history'} onclick={() => (app.go('history'))} aria-current={app.tab === 'history' ? 'page' : undefined}>Historique</button>
-    <button class="mode" onclick={() => theme.toggle()} aria-label={theme.current === 'dark' ? 'Passer en mode jour' : 'Passer en mode nuit'} title={theme.current === 'dark' ? 'Mode jour' : 'Mode nuit'}>
+    <button class:on={app.tab === 'history'} onclick={() => (app.go('history'))} aria-current={app.tab === 'history' ? 'page' : undefined}>{t('tabHistory')}</button>
+    <button class="lang" onclick={() => i18n.toggle()} aria-label={t('switchLang')} title={t('switchLang')}>{t('langShort')}</button>
+    <button class="mode" onclick={() => theme.toggle()} aria-label={theme.current === 'dark' ? t('toDay') : t('toNight')} title={theme.current === 'dark' ? t('day') : t('night')}>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class:night={theme.current === 'dark'}>
         <mask id="moon"><rect width="24" height="24" fill="#fff" /><circle class="bite" cx="24" cy="4" r="7" fill="#000" /></mask>
         <circle class="core" cx="12" cy="12" r="5" mask="url(#moon)" fill="currentColor" />
@@ -57,12 +59,12 @@
 </header>
 
 {#if app.everConnected && !app.connected}
-  <div class="offline" role="status">Le serveur ne répond plus, je réessaie…</div>
+  <div class="offline" role="status">{t('offline')}</div>
 {/if}
 
 <main>
   {#if !app.everConnected}
-    <Splash text="Mine ?" />
+    <Splash text={t('ask')} />
   {:else if app.tab === 'mine'}
     <section class="hero">
       <Sky />
@@ -73,7 +75,7 @@
       <section class="cards" aria-live="polite">
         <div class="cards-head">
           <h2>{heading}</h2>
-          {#if finishedCount}<button class="link" onclick={tidy}>Tout ranger</button>{/if}
+          {#if finishedCount}<button class="link" onclick={tidy}>{t('tidyAll')}</button>{/if}
         </div>
         {#each app.cards as [key, d] (key)}
           <DownloadRow {key} {d} />
@@ -88,18 +90,18 @@
 </main>
 
 <footer class="foot">
-  <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>Conditions d'utilisation</a>
+  <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>{t('terms')}</a>
   <span>·</span>
-  <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>Confidentialité</a>
+  <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>{t('privacy')}</a>
   <span>·</span>
-  <a href={SOURCE_URL} target="_blank" rel="noreferrer">Code source</a>
+  <a href={SOURCE_URL} target="_blank" rel="noreferrer">{t('source')}</a>
   {#if version}<span>· {version}</span>{/if}
 </footer>
 
 {#if app.toast}
   <div class="toast" data-kind={app.toast.kind} role={app.toast.kind === 'error' ? 'alert' : 'status'}>
     {app.toast.text}
-    <button onclick={() => (app.toast = null)} aria-label="Fermer">×</button>
+    <button onclick={() => (app.toast = null)} aria-label={t('close')}>×</button>
   </div>
 {/if}
 
@@ -112,6 +114,8 @@
   nav button { position: relative; border: 0; background: none; color: var(--muted); font: 500 14px var(--body); padding: 6px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   nav button:hover, nav button.on { color: var(--ink); }
   nav button.on { font-weight: 600; }
+  .lang { font: 600 12px var(--body) !important; letter-spacing: .04em; padding: 6px 8px !important; border-radius: 99px; margin-left: -6px; }
+  .lang:hover { background: var(--wash); }
   .mode { width: 32px; height: 32px; justify-content: center; border-radius: 99px; margin-left: -6px; }
   .mode:hover { background: var(--wash); }
   .mode svg { overflow: visible; }

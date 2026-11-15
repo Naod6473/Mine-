@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n.svelte';
   import { app } from '../lib/state.svelte';
   import { extOf, humanEta, humanSize, humanSpeed, label } from '../lib/labels';
   import type { Download } from '../lib/types';
@@ -11,22 +12,22 @@
   const href = $derived(d.status !== 'finished' ? null : app.sendToBrowser ? app.takeUrl(d) : app.fileUrl(d));
   const state = $derived.by(() => {
     switch (d.status) {
-      case 'downloading': return known ? `Mine… ${Math.floor(d.percent ?? 0)} %` : 'Mine…';
-      case 'postprocessing': return 'Mine… presque';
-      case 'finished': return 'Mine !';
-      case 'error': return 'Pas à toi.';
-      case 'pending': return 'En pause';
-      case 'queued': return 'En file';
-      default: return 'Mine ?';
+      case 'downloading': return known ? t('pct', Math.floor(d.percent ?? 0)) : t('busy');
+      case 'postprocessing': return t('almost');
+      case 'finished': return t('cry');
+      case 'error': return t('nope');
+      case 'pending': return t('paused');
+      case 'queued': return t('queued');
+      default: return t('ask');
     }
   });
   const meta = $derived.by(() => {
     if (d.status === 'downloading') return [humanSpeed(d.speed), humanEta(d.eta)].filter(Boolean).join(' · ');
     if (d.status === 'finished') return [extOf(d.filename) || label(d.format, d.format.toUpperCase()), humanSize(d.size), d.folder].filter(Boolean).join(' · ');
     if (d.status === 'error') return d.msg || d.error || '';
-    if (d.status === 'preparing') return 'Lecture du lien';
-    if (d.status === 'postprocessing') return 'Conversion du fichier';
-    if (d.status === 'queued') return 'En attente d’une place libre';
+    if (d.status === 'preparing') return t('reading');
+    if (d.status === 'postprocessing') return t('converting');
+    if (d.status === 'queued') return t('waiting');
     return '';
   });
 </script>
@@ -42,15 +43,15 @@
   <div class="bottom">
     <span class="meta" class:err={d.status === 'error'} title={meta}>{meta}</span>
     <span class="actions">
-      {#if d.status === 'pending'}<button class="textbtn strong" onclick={() => app.start(key)}>Lancer</button>{/if}
+      {#if d.status === 'pending'}<button class="textbtn strong" onclick={() => app.start(key)}>{t('start')}</button>{/if}
       {#if active}
-        <button class="textbtn" onclick={() => app.cancel(key)}>Annuler</button>
+        <button class="textbtn" onclick={() => app.cancel(key)}>{t('cancel')}</button>
       {:else if d.status === 'finished'}
-        {#if href}<a class="textbtn strong" {href} download={d.filename ?? ''}>Récupérer</a>{/if}
-        <button class="textbtn" onclick={() => app.dismiss(key, d)}>Ranger</button>
+        {#if href}<a class="textbtn strong" {href} download={d.filename ?? ''}>{t('fetch')}</a>{/if}
+        <button class="textbtn" onclick={() => app.dismiss(key, d)}>{t('dismiss')}</button>
       {:else if d.status === 'error'}
-        <button class="textbtn strong" onclick={() => app.retry(key)}>Réessayer</button>
-        <button class="textbtn" onclick={() => app.dismiss(key, d)}>Ranger</button>
+        <button class="textbtn strong" onclick={() => app.retry(key)}>{t('retry')}</button>
+        <button class="textbtn" onclick={() => app.dismiss(key, d)}>{t('dismiss')}</button>
       {/if}
     </span>
   </div>

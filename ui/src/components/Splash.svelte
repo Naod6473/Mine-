@@ -1,5 +1,6 @@
 <script lang="ts">
-  let { text = 'Mine ?' }: { text?: string } = $props();
+  import { t } from '../lib/i18n.svelte';
+  let { text = t('ask') }: { text?: string } = $props();
 </script>
 
 <div class="splash" role="status" aria-live="polite">

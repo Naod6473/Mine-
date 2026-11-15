@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 import type { Catalog, Download, HistoryEntry, Options, Preset, ServerConfig } from './types';
 import { load, save } from './storage';
 import { siteOf } from './labels';
+import { t } from './i18n.svelte';
 
 const K = { history: 'mine.history.v1', options: 'mine.options.v1', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
 const HISTORY_MAX = 500;
@@ -197,13 +198,13 @@ class AppState {
         // Si le serveur a déjà affiché une carte d'erreur pour ce lien, inutile de le dire deux fois.
         await new Promise((res) => setTimeout(res, 400));
         const shown = Object.values(this.done).some((d) => d.status === 'error' && (d.url === url || d.url === body.url));
-        if (!shown) this.notify(`Pas à toi. ${r.msg ?? ''}`.trim(), 'error');
+        if (!shown) this.notify(`${t('nope')} ${r.msg ?? ''}`.trim(), 'error');
         return shown;
       }
       if (r.msg) this.notify(r.msg);
       return true;
     } catch (e) {
-      this.notify(`Pas à toi. ${(e as Error).message}`, 'error');
+      this.notify(`${t('nope')} ${(e as Error).message}`, 'error');
       return false;
     }
   }
@@ -215,18 +216,18 @@ class AppState {
     this.claim();
     try {
       const r = await post('add', body);
-      if (r.status === 'error') { this.notify(`Pas à toi. ${r.msg ?? ''}`.trim(), 'error'); return false; }
-      this.notify('Relancé. Mine !');
+      if (r.status === 'error') { this.notify(`${t('nope')} ${r.msg ?? ''}`.trim(), 'error'); return false; }
+      this.notify(t('sentAgain'));
       this.go('mine');
       return true;
-    } catch (e) { this.notify(`Pas à toi. ${(e as Error).message}`, 'error'); return false; }
+    } catch (e) { this.notify(`${t('nope')} ${(e as Error).message}`, 'error'); return false; }
   }
 
   async cancel(key: string) { await post('delete', { ids: [key], where: 'queue' }).catch(() => {}); }
   async start(key: string) { await post('start', { ids: [key] }).catch(() => {}); }
   async retry(key: string) {
     const r = await post('retry', { id: key }).catch((e) => ({ status: 'error', msg: (e as Error).message }));
-    if (r.status === 'error') this.notify(`Pas à toi. ${r.msg ?? ''}`.trim(), 'error');
+    if (r.status === 'error') this.notify(`${t('nope')} ${r.msg ?? ''}`.trim(), 'error');
   }
   dismiss(key: string, d: Download) {
     this.hidden = [...this.hidden, hiddenKey(key, d)];
