@@ -1,0 +1,23 @@
+# Mine!? : lancer avec `docker compose up -d`, puis ouvrir http://<ip>:8081
+services:
+  mine:
+    image: ${MINE_IMAGE:-ghcr.io/naod6473/mine:latest}
+    container_name: mine
+    restart: unless-stopped
+    ports:
+      - "${MINE_PORT:-8081}:8081"
+    volumes:
+      # Dossier où arrivent les fichiers (monté depuis l'hôte Proxmox dans le LXC).
+      - ${MINE_DOWNLOADS:-/downloads}:/downloads
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Europe/Paris"
+      # 3 téléchargements à la fois, les suivants attendent leur tour.
+      MAX_CONCURRENT_DOWNLOADS: "3"
+      # Nom des fichiers : titre.extension (voir les variables yt-dlp pour le modifier).
+      OUTPUT_TEMPLATE: "%(title)s.%(ext)s"
+      # Retire du serveur les téléchargements terminés au bout de 7 jours (l'historique du navigateur reste).
+      CLEAR_COMPLETED_AFTER: "604800"
+      # Met yt-dlp à jour chaque nuit à 4 h, les sites changent souvent.
+      YTDL_NIGHTLY_UPDATE_TIME: "04:00"
