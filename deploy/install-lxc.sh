@@ -35,8 +35,10 @@ pct status "$CTID" >/dev/null 2>&1 && fail "Le conteneur $CTID existe déjà. Ch
 
 say "Recherche du modèle Debian 13…"
 pveam update >/dev/null
-TEMPLATE="$(pveam available --section system | awk '/debian-13-standard/ {print $2}' | sort -V | tail -n1)"
-[ -n "$TEMPLATE" ] || fail "Modèle debian-13-standard introuvable dans pveam."
+# Le modèle doit correspondre au processeur de l'hôte : pveam liste aussi les versions arm64.
+ARCH="$(dpkg --print-architecture)"
+TEMPLATE="$(pveam available --section system | awk -v a="_${ARCH}.tar" '/debian-13-standard/ && index($2, a) {print $2}' | sort -V | tail -n1)"
+[ -n "$TEMPLATE" ] || fail "Modèle debian-13-standard ($ARCH) introuvable dans pveam."
 if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE"; then
   say "Téléchargement de $TEMPLATE…"
   pveam download "$TEMPLATE_STORAGE" "$TEMPLATE" >/dev/null
