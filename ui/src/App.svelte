@@ -6,6 +6,7 @@
   import Sky from './components/Sky.svelte';
   import History from './components/History.svelte';
   import Splash from './components/Splash.svelte';
+  import Legal from './components/Legal.svelte';
   import { theme } from './lib/theme.svelte';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
@@ -34,15 +35,15 @@
 </svelte:head>
 
 <header>
-  <button class="brand" onclick={() => (app.tab = 'mine')} aria-label="Mine!?, accueil">
+  <button class="brand" onclick={() => (app.go('mine'))} aria-label="Mine!?, accueil">
     <img src="gull-head.png" alt="" width="30" height="30" />
     <span>Mine!?</span>
   </button>
   <nav aria-label="Sections">
-    <button class:on={app.tab === 'mine'} onclick={() => (app.tab = 'mine')} aria-current={app.tab === 'mine' ? 'page' : undefined}>
+    <button class:on={app.tab === 'mine'} onclick={() => (app.go('mine'))} aria-current={app.tab === 'mine' ? 'page' : undefined}>
       Mine{#if app.activeCount}<span class="badge">{app.activeCount}</span>{/if}
     </button>
-    <button class:on={app.tab === 'history'} onclick={() => (app.tab = 'history')} aria-current={app.tab === 'history' ? 'page' : undefined}>Historique</button>
+    <button class:on={app.tab === 'history'} onclick={() => (app.go('history'))} aria-current={app.tab === 'history' ? 'page' : undefined}>Historique</button>
     <button class="mode" onclick={() => theme.toggle()} aria-label={theme.current === 'dark' ? 'Passer en mode jour' : 'Passer en mode nuit'} title={theme.current === 'dark' ? 'Mode jour' : 'Mode nuit'}>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" class:night={theme.current === 'dark'}>
         <mask id="moon"><rect width="24" height="24" fill="#fff" /><circle class="bite" cx="24" cy="4" r="7" fill="#000" /></mask>
@@ -79,12 +80,18 @@
         {/each}
       </section>
     {/if}
-  {:else}
+  {:else if app.tab === 'history'}
     <History />
+  {:else}
+    <Legal page={app.tab} />
   {/if}
 </main>
 
 <footer class="foot">
+  <a href="#conditions" onclick={(e) => { e.preventDefault(); app.go('terms'); }}>Conditions d'utilisation</a>
+  <span>·</span>
+  <a href="#confidentialite" onclick={(e) => { e.preventDefault(); app.go('privacy'); }}>Confidentialité</a>
+  <span>·</span>
   <a href={SOURCE_URL} target="_blank" rel="noreferrer">Code source</a>
   {#if version}<span>· {version}</span>{/if}
 </footer>
@@ -116,7 +123,8 @@
   .mode .night .rays { opacity: 0; transform: rotate(-45deg) scale(.6); }
   .badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--beak); color: #14181C; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
   main { max-width: 640px; margin: 0 auto; padding: 0 20px 40px; }
-  .hero { padding: clamp(8px, 4vh, 40px) 0 32px; }
+  .hero { padding: calc(clamp(8px, 4vh, 40px) + clamp(190px, 30vh, 250px) * .6) 0 32px; transition: padding .6s var(--ease); }
+  .hero:has(:global(.sky.flying)) { padding-top: clamp(8px, 4vh, 40px); }
   .cards { display: grid; gap: 26px; margin-top: 8px; }
   .cards-head { display: flex; justify-content: space-between; align-items: baseline; }
   h2 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
@@ -124,7 +132,7 @@
   .link:hover { color: var(--ink); }
   main:has(:global(.history)) { padding-top: 36px; max-width: 720px; }
   .offline { max-width: 600px; margin: 14px auto 0; padding: 8px 14px; border-radius: 99px; background: color-mix(in oklab, var(--danger) 10%, var(--bg)); color: var(--danger); font-size: 13px; font-weight: 500; text-align: center; }
-  .foot { text-align: center; padding: 28px 20px 32px; font-size: 12px; color: var(--muted); }
+  .foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; padding: 28px 20px 32px; font-size: 12px; color: var(--muted); }
   .foot a { color: inherit; }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: min(560px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px;
     padding: 11px 12px 11px 18px; border-radius: 99px; background: var(--ink); color: var(--bg); font-size: 14px; box-shadow: 0 10px 30px -12px rgb(0 0 0 / .35); animation: toast .35s var(--spring); z-index: 10; }

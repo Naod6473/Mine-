@@ -1,4 +1,4 @@
-<p align="center"><img src="ui/public/logo.webp" width="140" alt=""></p>
+<p align="center"><img src="ui/public/icon-192.png" width="96" alt=""></p>
 
 <h1 align="center">Mine!?</h1>
 
@@ -85,6 +85,10 @@ docker compose up -d   # avec le compose.yaml de ce dépôt
 | `PUID` / `PGID` | `1000` | Utilisateur propriétaire des fichiers |
 | `URL_PREFIX` | vide | Préfixe d'URL derrière un reverse proxy, par exemple `/mine/` |
 | `ALLOW_PRIVATE_ADDRESSES` | `false` | Autoriser les liens vers ton réseau local |
+
+## Conditions et confidentialité
+
+Les conditions d'utilisation et la page de confidentialité sont dans l'application (liens en bas de page). Elles désignent comme responsable « l'administrateur », c'est-à-dire la personne qui installe l'instance.
 
 ## Sécurité
 

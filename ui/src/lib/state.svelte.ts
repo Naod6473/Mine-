@@ -27,7 +27,7 @@ class AppState {
   mode = $state<'simple' | 'advanced'>(load(K.mode, 'simple'));
   options = $state<Options>({ ...DEFAULT_OPTIONS, ...load<Partial<Options>>(K.options, {}) });
   presets = $state<Preset[]>(load(K.presets, []));
-  tab = $state<'mine' | 'history'>('mine');
+  tab = $state<Tab>(tabFromHash());
   submitting = $state(false);
   /** Vrai pendant ~2 s après un téléchargement réussi : la mouette crie « Mine ! ». */
   celebrate = $state(false);
@@ -90,7 +90,7 @@ class AppState {
       if (d.status === 'finished') {
         this.celebrate = true;
         clearTimeout(this.celebrateTimer);
-        this.celebrateTimer = setTimeout(() => (this.celebrate = false), 3800);
+        this.celebrateTimer = setTimeout(() => (this.celebrate = false), 2400);
         if (this.mine.has(d.url) && this.sendToBrowser) this.deliver(d);
       }
       if (this.mine.delete(d.url)) sessionSave(this.mine);
@@ -132,6 +132,14 @@ class AppState {
     for (const e of entries) if (e && typeof e.key === 'string' && typeof e.url === 'string') map.set(e.key, e);
     this.history = [...map.values()].sort((a, b) => b.date - a.date).slice(0, HISTORY_MAX);
     save(K.history, this.history);
+  }
+
+  /** Change de page et garde l'adresse à jour (#historique, #conditions, #confidentialite). */
+  go(t: Tab) {
+    this.tab = t;
+    const hash = t === 'mine' ? '' : '#' + HASH[t];
+    if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
+    scrollTo({ top: 0 });
   }
 
   setMode(m: 'simple' | 'advanced') { this.mode = m; save(K.mode, m); }
@@ -209,7 +217,7 @@ class AppState {
       const r = await post('add', body);
       if (r.status === 'error') { this.notify(`Pas à toi. ${r.msg ?? ''}`.trim(), 'error'); return false; }
       this.notify('Relancé. Mine !');
-      this.tab = 'mine';
+      this.go('mine');
       return true;
     } catch (e) { this.notify(`Pas à toi. ${(e as Error).message}`, 'error'); return false; }
   }
@@ -260,6 +268,13 @@ class AppState {
     if (d.folder) base += d.folder.split('/').map(encodeURIComponent).join('/') + '/';
     return base + encodeURIComponent(d.filename);
   }
+}
+
+export type Tab = 'mine' | 'history' | 'terms' | 'privacy';
+const HASH: Record<Exclude<Tab, 'mine'>, string> = { history: 'historique', terms: 'conditions', privacy: 'confidentialite' };
+function tabFromHash(): Tab {
+  const h = location.hash.slice(1);
+  return (Object.entries(HASH).find(([, v]) => v === h)?.[0] as Tab) ?? 'mine';
 }
 
 const MINE_KEY = 'mine.claimed.v1';
