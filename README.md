@@ -4,6 +4,8 @@
 
 <p align="center">Tu colles un lien, tu appuies sur <b>Mine !</b>, et le fichier arrive dans ton navigateur.</p>
 
+<p align="center"><a href="https://naod6473.github.io/Mine-/">Page de présentation</a></p>
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/mine-dark.png">

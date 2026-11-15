@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mine!? · paste a link, get the file</title>
+<meta name="description" content="Mine!? is a self-hosted downloader for Proxmox VE and Docker: paste a link, press Mine!, and the file lands in your browser.">
+<meta name="theme-color" content="#F7F9FA">
+<meta property="og:title" content="Mine!?">
+<meta property="og:description" content="Paste a link, press Mine!, get the file. Self-hosted, open source.">
+<meta property="og:image" content="media/poster.jpg">
+<link rel="icon" href="media/favicon.png">
+<link rel="apple-touch-icon" href="media/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  try { var t = localStorage.getItem('mine.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+:root {
+  --bg: #F7F9FA; --surface: #FFFFFF; --ink: #14181C; --muted: #6B7680; --line: #E2E7EB;
+  --wash: #EDF3F6; --beak: #F39A1E; --sea: #2C7DA0;
+  --display: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1215; --surface: #141A1E; --ink: #ECF1F4; --muted: #8A95A0; --line: #232A31;
+    --wash: #131C22; --beak: #F5A52A; --sea: #63B2D4; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1215; --surface: #141A1E; --ink: #ECF1F4; --muted: #8A95A0; --line: #232A31;
+  --wash: #131C22; --beak: #F5A52A; --sea: #63B2D4; color-scheme: dark;
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .6s; animation-timing-function: ease-in-out; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+img, video { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--beak); outline-offset: 3px; }
+::selection { background: color-mix(in oklab, var(--beak) 35%, transparent); }
+.wrap { width: min(1040px, 100% - 32px); margin-inline: auto; }
+
+/* En-tête */
+header { position: sticky; top: 0; z-index: 5; background: color-mix(in oklab, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid transparent; }
+header.scrolled { border-bottom-color: var(--line); }
+.bar { display: flex; align-items: center; gap: 12px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 8px; font: 600 22px var(--display); text-decoration: none; letter-spacing: -.01em; }
+.brand img { width: 34px; height: 34px; object-fit: contain; }
+.bar nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.bar nav a.nl { font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; padding: 6px 10px; }
+.bar nav a.nl:hover { color: var(--ink); }
+.pill { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 2px; display: inline-flex; }
+.pill button { border: 0; background: none; font: 600 12px var(--body); color: var(--muted); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+.pill button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.icon { width: 36px; height: 36px; border: 0; background: none; color: var(--ink); cursor: pointer; display: grid; place-items: center; border-radius: 50%; }
+.icon:hover { background: var(--wash); }
+@media (max-width: 720px) { .bar nav a.nl { display: none; } }
+
+/* Hero */
+.hero { text-align: center; padding: clamp(40px, 9vh, 96px) 0 40px; }
+.gull { width: clamp(150px, 22vw, 220px); margin: 0 auto 8px; animation: glide 5s ease-in-out infinite; }
+@keyframes glide { 50% { transform: translateY(-10px) rotate(-1.5deg); } }
+h1 { font: 600 clamp(40px, 7vw, 76px)/1.02 var(--display); letter-spacing: -.02em; margin: 0 auto 18px; max-width: 14ch; }
+h1 em { font-style: normal; color: var(--beak); }
+.lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 40ch; margin: 0 auto 28px; }
+.cta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; font: 600 16px var(--display); text-decoration: none; border: 1px solid var(--line); background: var(--surface); }
+.btn.go { background: var(--beak); border-color: var(--beak); color: #14181C; }
+.btn:hover { transform: translateY(-1px); }
+.btn { transition: transform .2s var(--ease); }
+
+/* Démo */
+.demo { margin: 40px auto 0; max-width: 920px; }
+.frame { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); box-shadow: 0 30px 60px -30px rgba(20, 40, 60, .25); }
+.frame .dots { display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.frame .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.frame video { width: 100%; aspect-ratio: 1280 / 800; background: #F7F9FA; }
+.caption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 12px; }
+.caption a { color: var(--sea); }
+
+/* Sections */
+section { padding: 72px 0; }
+h2 { font: 600 clamp(28px, 4vw, 40px)/1.1 var(--display); letter-spacing: -.01em; margin: 0 0 10px; }
+.sub { color: var(--muted); margin: 0 0 36px; max-width: 56ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+.card b { display: block; font: 600 18px var(--display); margin-bottom: 4px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.card .k { font-size: 26px; margin-bottom: 10px; line-height: 1; }
+
+.steps { counter-reset: s; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.steps li { list-style: none; counter-increment: s; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--bg); font: 600 16px var(--display); margin-bottom: 12px; }
+.steps { padding: 0; margin: 0; }
+
+.install { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.code { position: relative; background: #0E1215; color: #ECF1F4; border-radius: 14px; padding: 16px 16px 16px 18px; font: 13.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; white-space: pre; }
+.code .c { color: #7D8892; }
+.copy { position: absolute; top: 10px; right: 10px; border: 1px solid #2A333B; background: #141A1E; color: #ECF1F4; font: 500 12px var(--body); border-radius: 8px; padding: 4px 8px; cursor: pointer; }
+.install h3 { font: 600 18px var(--display); margin: 0 0 4px; }
+.install p { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+
+.sites { display: flex; flex-wrap: wrap; gap: 8px; }
+.sites span { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-size: 14px; }
+.sites span.more { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+details { border-bottom: 1px solid var(--line); padding: 16px 0; }
+details summary { cursor: pointer; font: 600 18px var(--display); list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+details summary::after { content: '+'; color: var(--muted); }
+details[open] summary::after { content: '–'; }
+details p { color: var(--muted); margin: 10px 0 0; max-width: 70ch; }
+
+footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+footer .row { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+footer a { color: var(--muted); }
+footer a:hover { color: var(--ink); }
+
+/* Le texte en langue mouette est un peu plus pâle, et la mouette s'agite. */
+body.seagull [data-k] { color: color-mix(in oklab, currentColor 70%, var(--beak)); }
+body.seagull .gull { animation: flap .35s ease-in-out infinite; }
+@keyframes flap { 50% { transform: translateY(-6px) scale(1.03); } }
+.squawk { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); font: 500 13px var(--body); padding: 8px 14px; border-radius: 999px; opacity: 0; transition: opacity .4s; pointer-events: none; z-index: 9; }
+.squawk.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .gull, body.seagull .gull { animation: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body class="seagull">
+<header id="top">
+  <div class="wrap bar">
+    <a class="brand" href="#"><img src="media/gull-head.png" alt="">Mine!?</a>
+    <nav>
+      <a class="nl" href="#demo" data-k="navDemo"></a>
+      <a class="nl" href="#install" data-k="navInstall"></a>
+      <a class="nl" href="#faq" data-k="navFaq"></a>
+      <span class="pill" role="group" aria-label="Language">
+        <button data-lang="seagull" title="Mine?">🐦</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="fr">FR</button>
+      </span>
+      <button class="icon" id="theme" aria-label="Day / night">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <img class="gull" src="media/gull-fly.webp" alt="" width="220" height="220">
+    <h1><span data-k="h1a"></span> <em data-k="h1b"></em></h1>
+    <p class="lede" data-k="lede"></p>
+    <div class="cta">
+      <a class="btn go" href="#install" data-k="ctaInstall"></a>
+      <a class="btn" href="https://github.com/Naod6473/Mine-" data-k="ctaCode"></a>
+    </div>
+
+    <div class="demo" id="demo">
+      <div class="frame">
+        <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <video src="media/demo.mp4" poster="media/poster.jpg" controls playsinline preload="metadata" muted></video>
+      </div>
+      <p class="caption"><span data-k="demoCap"></span> <a href="https://www.youtube.com/watch?v=h3TVZA_rYQc" target="_blank" rel="noopener">INFRACTION · Bam Bam</a> <span data-k="demoCap2"></span></p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2 data-k="howTitle"></h2>
+      <p class="sub" data-k="howSub"></p>
+      <ol class="steps">
+        <li class="card"><b data-k="s1t"></b><p data-k="s1"></p></li>
+        <li class="card"><b data-k="s2t"></b><p data-k="s2"></p></li>
+        <li class="card"><b data-k="s3t"></b><p data-k="s3"></p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2 data-k="featTitle"></h2>
+      <p class="sub" data-k="featSub"></p>
+      <div class="grid">
+        <div class="card"><div class="k">🎬</div><b data-k="f1t"></b><p data-k="f1"></p></div>
+        <div class="card"><div class="k">🎵</div><b data-k="f2t"></b><p data-k="f2"></p></div>
+        <div class="card"><div class="k">📥</div><b data-k="f3t"></b><p data-k="f3"></p></div>
+        <div class="card"><div class="k">🕘</div><b data-k="f4t"></b><p data-k="f4"></p></div>
+        <div class="card"><div class="k">🔖</div><b data-k="f5t"></b><p data-k="f5"></p></div>
+        <div class="card"><div class="k">🌗</div><b data-k="f6t"></b><p data-k="f6"></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2 data-k="sitesTitle"></h2>
+      <p class="sub" data-k="sitesSub"></p>
+      <div class="sites">
+        <span>YouTube</span><span>SoundCloud</span><span>Vimeo</span><span>Dailymotion</span><span>X (Twitter)</span>
+        <span>Instagram</span><span>TikTok</span><span>Twitch</span><span>Bandcamp</span><span>Reddit</span>
+        <span>Arte</span><span>France TV</span><span>Mixcloud</span><span>PeerTube</span>
+        <span class="more" data-k="sitesMore"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2 data-k="instTitle"></h2>
+      <p class="sub" data-k="instSub"></p>
+      <div class="install">
+        <div>
+          <h3>Proxmox VE</h3>
+          <p data-k="instPve"></p>
+          <div class="code"><button class="copy" data-k="copy"></button>curl -fsSL https://raw.githubusercontent.com/Naod6473/Mine-/main/deploy/install-lxc.sh -o install-lxc.sh
+bash install-lxc.sh</div>
+        </div>
+        <div>
+          <h3>Docker</h3>
+          <p data-k="instDocker"></p>
+          <div class="code"><button class="copy" data-k="copy"></button>docker run -d --name mine -p 8081:8081 \
+  -v ./downloads:/downloads \
+  --restart unless-stopped \
+  ghcr.io/naod6473/mine:latest</div>
+        </div>
+      </div>
+      <p class="caption" style="text-align:left" data-k="instNext"></p>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2 data-k="faqTitle"></h2>
+      <details><summary data-k="q1"></summary><p data-k="a1"></p></details>
+      <details><summary data-k="q2"></summary><p data-k="a2"></p></details>
+      <details><summary data-k="q3"></summary><p data-k="a3"></p></details>
+      <details><summary data-k="q4"></summary><p data-k="a4"></p></details>
+      <details><summary data-k="q5"></summary><p data-k="a5"></p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span data-k="foot"></span>
+    <a href="https://github.com/Naod6473/Mine-" data-k="footCode"></a>
+    <a href="https://github.com/Naod6473/Mine-/blob/main/LICENSE">AGPL-3.0</a>
+    <a href="https://github.com/yt-dlp/yt-dlp">yt-dlp</a>
+    <span><span data-k="footMusic"></span> <a href="https://www.youtube.com/watch?v=h3TVZA_rYQc" target="_blank" rel="noopener">INFRACTION · Bam Bam</a></span>
+  </div>
+</footer>
+<div class="squawk" id="squawk" aria-live="polite"></div>
+
+<script>
+const T = {
+  en: {
+    navDemo: 'Demo', navInstall: 'Install', navFaq: 'Questions', copy: 'Copy', copied: 'Copied',
+    h1a: 'Paste a link.', h1b: 'Mine!',
+    lede: 'A self-hosted downloader with a seagull’s manners: it grabs the video, the music or the subtitles, and drops the file straight into your browser.',
+    ctaInstall: 'Install it', ctaCode: 'Source code',
+    demoCap: 'Real link, quick demo, no fake seagulls harmed. Music:', demoCap2: '(no copyright).',
+    howTitle: 'Do you really need instructions?', howSub: 'Fine. Here they are, all three of them.',
+    s1t: 'Paste the link', s1: 'YouTube, SoundCloud, a playlist, whatever. Ctrl+V anywhere, or drop it on the page.',
+    s2t: 'Press Mine!', s2: 'The seagull takes off. It shows progress, speed and time left. Feel free to watch, it likes an audience.',
+    s3t: 'Get the file', s3: 'It lands in your browser’s downloads. The server forgets it right away: no hoarding, unlike seagulls.',
+    featTitle: 'Small, but it grabs everything', featSub: 'One field, one button, and a few options for people who like options.',
+    f1t: 'Video', f1: 'MP4 or best available, from 144p to 4K, with codec choice.',
+    f2t: 'Music', f2: 'MP3, M4A, Opus, FLAC or WAV. Whole playlists too.',
+    f3t: 'Straight to your browser', f3: 'The server downloads and converts, sends the file, then deletes its copy.',
+    f4t: 'History', f4: 'Kept in your browser: search, retry, copy the link, export as JSON.',
+    f5t: '“Mine!” bookmark', f5: 'One click on any video page sends it to your instance. Plus a seagull cry when it’s done.',
+    f6t: 'Day and night', f6: 'Follows your system, or switch with a soft fade. Works on phones, installs as an app.',
+    sitesTitle: 'Over a thousand sites', sitesSub: 'Mine!? relies on yt-dlp, so if yt-dlp can read it, the seagull can take it. Your instance lists them all.',
+    sitesMore: '+ 1,200 more',
+    instTitle: 'Install in one minute', instSub: 'On your own server. Nothing leaves your network except the requests to the sites you download from.',
+    instPve: 'On the Proxmox host, as root. The script creates a small Debian LXC, installs Docker and prints the address to open.',
+    instDocker: 'Anywhere Docker runs. Then open http://your-server:8081.',
+    instNext: 'Updating later: docker compose pull && docker compose up -d. yt-dlp also updates itself every night.',
+    faqTitle: 'Questions',
+    q1: 'Where do the files go?', a1: 'Into the downloads folder of the browser you used. The server keeps them only while converting and sending, then deletes them.',
+    q2: 'Does it handle playlists?', a2: 'Yes. Paste a playlist link and each item arrives one after the other. You can also pick a range or a clip.',
+    q3: 'Is it legal?', a3: 'The tool is. What you download is your responsibility: stick to content you have the right to save, like your own videos or royalty-free music.',
+    q4: 'Does it collect anything?', a4: 'No account, no tracking, no analytics. History stays in your browser. The instance belongs to whoever installs it.',
+    q5: 'Why “Mine!?”', a5: 'Because a seagull sees a link the way it sees your fries.',
+    foot: 'Mine!? · free software', footCode: 'Source code', footMusic: 'Demo music:',
+    squawk: 'Translated from Seagull.'
+  },
+  fr: {
+    navDemo: 'Démo', navInstall: 'Installer', navFaq: 'Questions', copy: 'Copier', copied: 'Copié',
+    h1a: 'Colle un lien.', h1b: 'À moi !',
+    lede: 'Un téléchargeur auto-hébergé avec les manières d’une mouette : il attrape la vidéo, la musique ou les sous-titres, et dépose le fichier directement dans ton navigateur.',
+    ctaInstall: 'L’installer', ctaCode: 'Code source',
+    demoCap: 'Vrai lien, démo rapide, aucune mouette maltraitée. Musique :', demoCap2: '(libre de droits).',
+    howTitle: 'Vraiment, y’a besoin d’explications ?', howSub: 'Bon. Les voilà, toutes les trois.',
+    s1t: 'Colle le lien', s1: 'YouTube, SoundCloud, une playlist, peu importe. Ctrl+V n’importe où, ou glisse-le sur la page.',
+    s2t: 'Appuie sur À moi !', s2: 'La mouette s’envole et affiche l’avancement, la vitesse et le temps restant. Tu peux regarder, elle aime le public.',
+    s3t: 'Récupère le fichier', s3: 'Il arrive dans les téléchargements du navigateur. Le serveur l’oublie aussitôt : pas de stock, contrairement aux mouettes.',
+    featTitle: 'Petit, mais il attrape tout', featSub: 'Un champ, un bouton, et quelques options pour qui aime les options.',
+    f1t: 'Vidéo', f1: 'MP4 ou la meilleure qualité, de 144p à 4K, avec le choix du codec.',
+    f2t: 'Musique', f2: 'MP3, M4A, Opus, FLAC ou WAV. Les playlists entières aussi.',
+    f3t: 'Direct dans le navigateur', f3: 'Le serveur télécharge et convertit, envoie le fichier, puis efface sa copie.',
+    f4t: 'Historique', f4: 'Gardé dans ton navigateur : recherche, relance, copie du lien, export JSON.',
+    f5t: 'Favori « À moi ! »', f5: 'Un clic sur n’importe quelle page vidéo l’envoie à ton instance. Avec un cri de mouette à la fin.',
+    f6t: 'Jour et nuit', f6: 'Suit ton système, ou bascule avec un fondu doux. Marche au téléphone, s’installe comme une app.',
+    sitesTitle: 'Plus de mille sites', sitesSub: 'Mine!? s’appuie sur yt-dlp : si yt-dlp sait le lire, la mouette sait le prendre. Ton instance les liste tous.',
+    sitesMore: '+ 1 200 autres',
+    instTitle: 'Installé en une minute', instSub: 'Sur ton propre serveur. Rien ne sort de ton réseau, à part les requêtes vers les sites que tu télécharges.',
+    instPve: 'Sur l’hôte Proxmox, en root. Le script crée un petit LXC Debian, installe Docker et affiche l’adresse à ouvrir.',
+    instDocker: 'Partout où Docker tourne. Ensuite, ouvre http://ton-serveur:8081.',
+    instNext: 'Pour mettre à jour : docker compose pull && docker compose up -d. yt-dlp se met aussi à jour chaque nuit.',
+    faqTitle: 'Questions',
+    q1: 'Où vont les fichiers ?', a1: 'Dans le dossier de téléchargements du navigateur utilisé. Le serveur ne les garde que le temps de convertir et d’envoyer, puis les efface.',
+    q2: 'Ça gère les playlists ?', a2: 'Oui. Colle le lien d’une playlist et chaque élément arrive l’un après l’autre. Tu peux aussi choisir une plage ou un extrait.',
+    q3: 'C’est légal ?', a3: 'L’outil, oui. Ce que tu télécharges relève de ta responsabilité : reste sur ce que tu as le droit de garder, comme tes vidéos ou de la musique libre de droits.',
+    q4: 'Ça collecte quelque chose ?', a4: 'Pas de compte, pas de pisteur, pas de statistiques. L’historique reste dans ton navigateur. L’instance appartient à qui l’installe.',
+    q5: 'Pourquoi « Mine!? »', a5: 'Parce qu’une mouette voit un lien comme elle voit tes frites.',
+    foot: 'Mine!? · logiciel libre', footCode: 'Code source', footMusic: 'Musique de la démo :',
+    squawk: 'Traduit du mouette.'
+  }
+};
+
+const CRIES = ['Mine!', 'Mine?', 'Mine!?', 'Mine…', 'Mine?!', 'MINE!', 'mine', 'Mine Mine'];
+function seagull(text, seed) {
+  let out = '', i = seed;
+  while (out.length < text.length) { out += (out ? ' ' : '') + CRIES[(i * 7 + 3) % CRIES.length]; i++; }
+  return out.slice(0, Math.max(4, text.length)).replace(/\s+$/, '');
+}
+
+const nodes = [...document.querySelectorAll('[data-k]')];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lang = 'seagull', timer = 0;
+
+function target(el, l) { return (T[l] || T.en)[el.dataset.k] || ''; }
+
+function paint(l) {
+  document.querySelectorAll('.pill button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  document.body.classList.toggle('seagull', l === 'seagull');
+  document.documentElement.lang = l === 'fr' ? 'fr' : 'en';
+}
+
+function setSeagull() {
+  cancelAnimationFrame(timer);
+  lang = 'seagull'; paint(lang);
+  nodes.forEach((el, n) => { el.textContent = seagull(target(el, 'en'), n); });
+}
+
+// Remplace le cri lettre par lettre par la vraie phrase.
+function morph(l) {
+  cancelAnimationFrame(timer);
+  const from = nodes.map(el => el.textContent), to = nodes.map(el => target(el, l));
+  lang = l; paint(l);
+  try { localStorage.setItem('mine.site.lang', l); } catch (e) {}
+  if (reduce) { nodes.forEach((el, i) => el.textContent = to[i]); return; }
+  const start = performance.now(), speed = 0.09; // caractères par milliseconde
+  const step = now => {
+    const k = Math.floor((now - start) * speed);
+    let busy = false;
+    nodes.forEach((el, i) => {
+      const t = to[i], f = from[i];
+      if (k >= Math.max(t.length, f.length)) { if (el.textContent !== t) el.textContent = t; return; }
+      busy = true;
+      el.textContent = t.slice(0, k) + f.slice(k, Math.max(k, t.length));
+    });
+    if (busy) timer = requestAnimationFrame(step);
+  };
+  timer = requestAnimationFrame(step);
+}
+
+function squawk(msg) {
+  const s = document.getElementById('squawk');
+  s.textContent = msg; s.classList.add('on');
+  setTimeout(() => s.classList.remove('on'), 2200);
+}
+
+document.querySelectorAll('.pill button').forEach(b => b.addEventListener('click', () => {
+  const l = b.dataset.lang;
+  if (l === 'seagull') { setSeagull(); setTimeout(() => squawk('Mine? Mine!? Mine.'), 50); return; }
+  morph(l);
+}));
+
+// Au premier chargement : quelques secondes de mouette, puis l'anglais (ou la langue choisie avant).
+let saved = null;
+try { saved = localStorage.getItem('mine.site.lang'); } catch (e) {}
+const first = saved === 'fr' ? 'fr' : 'en';
+setSeagull();
+setTimeout(() => { morph(first); setTimeout(() => squawk(T[first].squawk), 600); }, reduce ? 600 : 2600);
+
+// Boutons copier
+document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
+  const code = b.parentElement.textContent.replace(b.textContent, '').trim();
+  try { await navigator.clipboard.writeText(code); b.textContent = (T[lang] || T.en).copied; setTimeout(() => b.textContent = (T[lang] || T.en).copy, 1500); } catch (e) {}
+}));
+
+// Jour / nuit avec fondu doux
+document.getElementById('theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const apply = () => { root.dataset.theme = dark ? 'light' : 'dark'; try { localStorage.setItem('mine.theme', root.dataset.theme); } catch (e) {} };
+  if (document.startViewTransition && !reduce) document.startViewTransition(apply); else apply();
+});
+
+const hdr = document.querySelector('header');
+addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 8), { passive: true });
+</script>
+</body>
+</html>

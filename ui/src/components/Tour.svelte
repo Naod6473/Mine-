@@ -91,7 +91,7 @@
   <div class="card" class:below class:above={!below} role="dialog" aria-modal="true" aria-label={t('tourLink')}
     style:top={rect ? (below ? `${rect.bottom + 18}px` : 'auto') : '30%'}
     style:bottom={rect && !below ? `${innerHeight - rect.top + 18}px` : 'auto'}>
-    <img src="logo-rest.webp" alt="" width="400" height="317" />
+    <img src="logo-rest.webp" alt="" width="228" height="193" />
     <div class="talk">
       <p aria-live="polite">{shown}</p>
       <div class="nav">
@@ -109,8 +109,8 @@
     box-shadow: 0 0 0 9999px color-mix(in oklab, var(--bg) 18%, rgb(8 12 16 / .62)), 0 0 0 2px var(--beak);
     transition: all .45s var(--ease); }
   .card { position: fixed; left: 50%; transform: translateX(-50%); z-index: 52; width: min(520px, calc(100vw - 24px));
-    display: grid; grid-template-columns: 150px 1fr; gap: 6px; align-items: end; transition: top .45s var(--ease), bottom .45s var(--ease); }
-  .card img { width: 150px; height: auto; animation: bob 2.6s ease-in-out infinite; }
+    display: grid; grid-template-columns: 116px 1fr; gap: 10px; align-items: end; transition: top .45s var(--ease), bottom .45s var(--ease); }
+  .card img { width: 116px; height: auto; animation: bob 2.6s ease-in-out infinite; }
   @keyframes bob { 50% { transform: translateY(-5px); } }
   .talk { position: relative; background: var(--surface); color: var(--ink); border-radius: 18px; padding: 14px 16px 10px; box-shadow: 0 10px 40px rgb(0 0 0 / .18); }
   .talk::before { content: ''; position: absolute; left: -7px; bottom: 22px; width: 14px; height: 14px; background: inherit; transform: rotate(45deg); border-radius: 3px; }
@@ -118,6 +118,6 @@
   .nav { display: flex; align-items: center; gap: 12px; }
   .count { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .go { border: 0; border-radius: 99px; background: var(--ink); color: var(--bg); font: 600 13.5px var(--body); padding: 8px 16px; cursor: pointer; }
-  @media (max-width: 480px) { .card { grid-template-columns: 96px 1fr; } .card img { width: 96px; } }
+  @media (max-width: 480px) { .card { grid-template-columns: 76px 1fr; } .card img { width: 76px; } }
   @media (prefers-reduced-motion: reduce) { .card img { animation: none; } .spot, .card { transition: none; } }
 </style>
