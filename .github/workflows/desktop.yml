@@ -1,6 +1,7 @@
 # Construit l'app de bureau (Windows, macOS, Linux).
 # Chaque push sur main produit les installeurs en artefacts ; un tag « desktop-v1.2.3 » les publie
-# dans une release GitHub (en brouillon, à relire avant de la rendre publique).
+# dans une release GitHub (en brouillon, à relire avant de la rendre publique), tout comme
+# un lancement manuel avec « release » coché.
 name: Desktop
 on:
   push:
@@ -8,6 +9,11 @@ on:
     paths: ['desktop/**', 'ui/**', '.github/workflows/desktop.yml']
     tags: ['desktop-v*']
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Publier une release en brouillon (tag desktop-v + version de tauri.conf.json)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -50,8 +56,8 @@ jobs:
         with:
           projectPath: desktop
           args: ${{ matrix.args }}
-          tagName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && github.ref_name || '' }}
-          releaseName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && format('Mine!? {0}', github.ref_name) || '' }}
+          tagName: ${{ (startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release) && 'desktop-v__VERSION__' || '' }}
+          releaseName: ${{ (startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release) && 'Mine!? __VERSION__ (bureau)' || '' }}
           releaseBody: |
             Installeurs de Mine!? pour Windows (.exe), macOS (.dmg) et Linux (.AppImage, .deb).
             Au premier lancement, l'app télécharge yt-dlp, ffmpeg et deno (une seule fois).
