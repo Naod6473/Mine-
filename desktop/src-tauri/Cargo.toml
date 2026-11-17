@@ -1,6 +1,6 @@
 [package]
 name = "mine-desktop"
-version = "1.0.0"
+version = "1.0.1"
 description = "Mine!? : colle un lien, la mouette récupère le fichier."
 license = "AGPL-3.0-or-later"
 edition = "2021"

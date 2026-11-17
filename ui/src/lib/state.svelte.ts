@@ -5,11 +5,15 @@ import { siteOf } from './labels';
 import { t } from './i18n.svelte';
 import { DESKTOP, desktopPost, desktopSocket } from './desktop';
 
-const K = { history: 'mine.history.v1', options: 'mine.options.v1', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
+const K = { history: 'mine.history.v1', options: DESKTOP ? 'mine.options.desktop.v1' : 'mine.options.v1', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
 const HISTORY_MAX = 500;
 
 export const DEFAULT_OPTIONS: Options = {
-  download_type: 'video', codec: 'auto', format: 'any', quality: 'best', folder: '',
+  // L'app de bureau sert surtout à la musique : MP3, meilleure qualité, avec la pochette.
+  ...(DESKTOP
+    ? { download_type: 'audio', codec: 'auto', format: 'mp3', quality: 'best' }
+    : { download_type: 'video', codec: 'auto', format: 'any', quality: 'best' }),
+  folder: '',
   playlist: 'all', playlist_item_limit: 10, subtitle_language: 'fr', subtitle_mode: 'prefer_manual',
   audio_tags: 'with_cover', clip_start: '', clip_end: '', custom_name_prefix: '',
   split_by_chapters: false, sponsorblock: false,
