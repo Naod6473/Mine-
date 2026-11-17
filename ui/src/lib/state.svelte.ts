@@ -47,6 +47,10 @@ class AppState {
   /** Version de bureau : où en sont yt-dlp, ffmpeg et deno. */
   tools = $state<{ ready: boolean; stage: string; percent: number | null; error: string | null }>({ ready: !DESKTOP, stage: '', percent: null, error: null });
   readonly desktop = DESKTOP;
+  /** Démo publique : jeton Turnstile du moment (usage unique) et de quoi en demander un autre. */
+  turnstileToken = $state('');
+  turnstileReset: (() => void) | null = null;
+  get demo() { return this.config?.DEMO ?? null; }
   private socket: Socket | null = null;
   /** Liens lancés depuis ce navigateur : leur fichier y est envoyé automatiquement à la fin. */
   private mine = new Set<string>(sessionLoad());
@@ -192,9 +196,13 @@ class AppState {
       auto_start: true,
     };
     if (this.config?.CUSTOM_DIRS && o.folder) body.folder = o.folder;
+    if (this.demo) {
+      body.url = singleVideoUrl(url);
+      if (this.turnstileToken) body.turnstile = this.turnstileToken;
+    }
     if (!useOptions) return body;
     if (o.playlist === 'single') body.url = singleVideoUrl(url);
-    if (o.playlist === 'limit') body.playlist_item_limit = Math.max(1, Number(o.playlist_item_limit) || 1);
+    if (o.playlist === 'limit' && !this.demo) body.playlist_item_limit = Math.max(1, Number(o.playlist_item_limit) || 1);
     if (o.download_type === 'captions') { body.subtitle_language = o.subtitle_language; body.subtitle_mode = o.subtitle_mode; }
     if (o.download_type === 'audio') body.audio_tags = o.audio_tags;
     if (o.download_type === 'video' || o.download_type === 'audio') {
@@ -219,6 +227,8 @@ class AppState {
     this.claim();
     try {
       const r = await post('add', body);
+      this.spendTurnstile();
+      if (r.code === 'demo_turnstile') { this.notify(t('demoBot'), 'error'); return false; }
       if (r.status === 'error') {
         // Si le serveur a déjà affiché une carte d'erreur pour ce lien, inutile de le dire deux fois.
         await new Promise((res) => setTimeout(res, 400));
@@ -238,14 +248,23 @@ class AppState {
   async again(h: HistoryEntry): Promise<boolean> {
     const body: Record<string, unknown> = { url: h.url, download_type: h.download_type, format: h.format, quality: h.quality, codec: 'auto', auto_start: true };
     if (this.config?.CUSTOM_DIRS && h.folder) body.folder = h.folder;
+    if (this.demo && this.turnstileToken) body.turnstile = this.turnstileToken;
     this.claim();
     try {
       const r = await post('add', body);
+      this.spendTurnstile();
       if (r.status === 'error') { this.notify(`${t('nope')} ${r.msg ?? ''}`.trim(), 'error'); return false; }
       this.notify(t('sentAgain'));
       this.go('mine');
       return true;
     } catch (e) { this.notify(`${t('nope')} ${(e as Error).message}`, 'error'); return false; }
+  }
+
+  /** Un jeton Turnstile ne sert qu'une fois : on en redemande un après chaque envoi. */
+  private spendTurnstile() {
+    if (!this.turnstileToken) return;
+    this.turnstileToken = '';
+    this.turnstileReset?.();
   }
 
   async cancel(key: string) { await post('delete', { ids: [key], where: 'queue' }).catch(() => {}); }
@@ -338,11 +357,15 @@ function sessionSave(set: Set<string>) {
 
 function hiddenKey(key: string, d: Download) { return `${key}#${d.timestamp}`; }
 
-async function post(path: string, body: unknown): Promise<{ status?: string; msg?: string }> {
+async function post(path: string, body: unknown): Promise<{ status?: string; msg?: string; code?: string }> {
   if (DESKTOP) return desktopPost(path, body);
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const text = await r.text();
-  if (!r.ok) throw new Error(text.replace(/^\d{3}:\s*/, '') || r.statusText);
+  if (!r.ok) {
+    // Les refus de la démo (quota, anti-robot…) arrivent en JSON avec un message lisible.
+    try { const j = JSON.parse(text); if (j && typeof j.msg === 'string') return { status: 'error', msg: j.msg, code: j.code }; } catch {}
+    throw new Error(text.replace(/^\d{3}:\s*/, '') || r.statusText);
+  }
   try { return JSON.parse(text); } catch { return {}; }
 }
 

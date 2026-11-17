@@ -1505,6 +1505,10 @@ class DownloadQueue:
         self._scheduled_probe_failures: dict[str, int] = {}
         self._live_monitor_task: Optional[asyncio.Task] = None
         self._live_monitor_wakeup = asyncio.Event()
+        # Optional gate (entry, etype) -> refusal message or None, run on every
+        # extracted entry before it is queued. The public demo uses it to turn
+        # away playlists, live streams and overlong videos.
+        self.entry_check = None
 
     def cancel_add(self):
         self._add_generation += 1
@@ -1975,6 +1979,12 @@ class DownloadQueue:
                 error = entry["msg"]
 
         etype = entry.get('_type') or 'video'
+
+        if self.entry_check is not None and not etype.startswith('url'):
+            refusal = self.entry_check(entry, etype)
+            if refusal:
+                log.info('Entry refused by entry_check: %s', refusal)
+                return {'status': 'error', 'msg': refusal}
 
         if etype.startswith('url'):
             log.debug('Processing as a url')

@@ -102,6 +102,27 @@ docker compose up -d   # avec le compose.yaml de ce dépôt
 
 Les conditions d'utilisation et la page de confidentialité sont dans l'application (liens en bas de page). Elles désignent comme responsable « l'administrateur », c'est-à-dire la personne qui installe l'instance.
 
+## Démo publique
+
+Pour montrer Mine!? à tout le monde sans ouvrir ton instance perso, lance une deuxième instance avec `DEMO_MODE=true` (exemple prêt à l'emploi : [`deploy/compose.demo.yaml`](deploy/compose.demo.yaml)). Dans ce mode :
+
+- chaque visiteur a sa propre file (un cookie aléatoire) : il ne voit, n'annule et ne récupère que ses téléchargements ;
+- pas d'abonnements, d'envoi de cookies, de playlists, de dossiers ni de préréglages du serveur ; les cookies configurés sur le serveur ne sont pas utilisés ;
+- un téléchargement à la fois par visiteur, et des limites réglables ;
+- un bandeau rappelle que ces limites ne valent que pour la démo, avec le lien pour installer Mine!? chez soi.
+
+| Variable | Défaut | Rôle |
+| --- | --- | --- |
+| `DEMO_MODE` | `false` | Active le mode démo |
+| `DEMO_DOWNLOADS_PER_HOUR` | `5` | Téléchargements par heure, par adresse IP et par visiteur |
+| `DEMO_MAX_DURATION_MINUTES` | `15` | Durée maximale d'une vidéo (les directs sont refusés) |
+| `DEMO_MAX_FILESIZE_MB` | `2048` | Taille maximale d'un fichier |
+| `DEMO_TURNSTILE_SITEKEY` / `DEMO_TURNSTILE_SECRET` | vide | Clés [Turnstile](https://developers.cloudflare.com/turnstile/) pour la vérification anti-robot (valable une heure par visiteur) |
+| `DEMO_IDLE_MINUTES` | `120` | Après ce délai sans visite, la file et les fichiers d'un visiteur sont effacés |
+| `DEMO_INSTALL_URL` | page de présentation | Lien « Installer Mine!? chez soi » du bandeau |
+
+Derrière Cloudflare Tunnel, l'adresse du visiteur est lue dans l'en-tête `CF-Connecting-IP`. N'expose la démo que par le tunnel (le compose d'exemple n'écoute que sur `127.0.0.1`).
+
 ## Sécurité
 
 Mine!? n'a pas de mot de passe. Sur ton réseau local, c'est acceptable. Pour y accéder de l'extérieur, passe par ton VPN (WireGuard, Tailscale) ou par un reverse proxy avec authentification, plutôt que d'ouvrir le port 8081 sur Internet.

@@ -136,7 +136,7 @@
       {/if}
     </div>
 
-    <div class="row">
+    {#if !app.demo}<div class="row">
       <span class="lbl">{t('playlist')}</span>
       <div class="seg">
         <button class:on={app.options.playlist === 'all'} onclick={() => (app.options.playlist = 'all')}>{t('all')}</button>
@@ -147,7 +147,7 @@
         <input class="num" type="number" min="1" bind:value={app.options.playlist_item_limit} aria-label={t('itemCount')} />
         <span class="muted">{t('firstItems')}</span>
       {/if}
-    </div>
+    </div>{/if}
 
     {#if isMedia}
       <div class="grid">
@@ -189,7 +189,7 @@
     {/if}
 
     <div class="foot">
-      {#if !app.desktop}<div class="cookies">
+      {#if !app.desktop && !app.demo}<div class="cookies">
         <span class="lbl">{t('cookies')}</span>
         <span class="muted">{cookies ? t('cookieSet') : cookies === false ? t('cookieNone') : '…'}</span>
         <button class="link" onclick={() => cookieInput?.click()}>{cookies ? t('replace') : t('sendFile')}</button>

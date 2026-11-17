@@ -12,6 +12,7 @@
   import Tour from './components/Tour.svelte';
   import { theme } from './lib/theme.svelte';
   import ToolsSetup from './components/ToolsSetup.svelte';
+  import DemoBanner from './components/DemoBanner.svelte';
   import { externalLinks } from './lib/desktop';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
@@ -76,6 +77,7 @@
     <section class="hero">
       <Sky />
       <MineBar initialUrl={shared} {autostart} />
+      <DemoBanner />
     </section>
 
     {#if app.cards.length}
