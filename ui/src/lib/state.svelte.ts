@@ -8,11 +8,12 @@ import { DESKTOP, desktopPost, desktopSocket } from './desktop';
 const K = { history: 'mine.history.v1', options: DESKTOP ? 'mine.options.desktop.v1' : 'mine.options.v1', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
 const HISTORY_MAX = 500;
 
+const MUSIC = { download_type: 'audio', codec: 'auto', format: 'mp3', quality: 'best' };
+const VIDEO = { download_type: 'video', codec: 'auto', format: 'any', quality: 'best' };
+
 export const DEFAULT_OPTIONS: Options = {
   // L'app de bureau sert surtout à la musique : MP3, meilleure qualité, avec la pochette.
-  ...(DESKTOP
-    ? { download_type: 'audio', codec: 'auto', format: 'mp3', quality: 'best' }
-    : { download_type: 'video', codec: 'auto', format: 'any', quality: 'best' }),
+  ...(DESKTOP ? MUSIC : VIDEO),
   folder: '',
   playlist: 'all', playlist_item_limit: 10, subtitle_language: 'fr', subtitle_mode: 'prefer_manual',
   audio_tags: 'with_cover', clip_start: '', clip_end: '', custom_name_prefix: '',
@@ -51,6 +52,10 @@ class AppState {
   turnstileToken = $state('');
   turnstileReset: (() => void) | null = null;
   get demo() { return this.config?.DEMO ?? null; }
+  /** Réglages par défaut : la démo publique démarre en MP3, comme l'app de bureau. */
+  get defaults(): Options {
+    return { ...DEFAULT_OPTIONS, ...(this.demo ? MUSIC : {}), folder: this.config?.DEFAULT_FOLDER ?? '' };
+  }
   private socket: Socket | null = null;
   /** Liens lancés depuis ce navigateur : leur fichier y est envoyé automatiquement à la fin. */
   private mine = new Set<string>(sessionLoad());
@@ -122,6 +127,8 @@ class AppState {
     s.on('configuration', (raw: string) => {
       const c = parse<ServerConfig>(raw);
       this.config = c;
+      // Démo, et aucun réglage enregistré dans ce navigateur : on part sur le MP3.
+      if (c.DEMO && !hasSaved(K.options)) this.options = { ...this.options, ...MUSIC };
       if (!this.options.folder && c.DEFAULT_FOLDER) this.options.folder = c.DEFAULT_FOLDER;
     });
     s.on('custom_dirs', (raw: string) => {
@@ -173,14 +180,14 @@ class AppState {
 
   setMode(m: 'simple' | 'advanced') { this.mode = m; save(K.mode, m); }
   saveOptions() { save(K.options, $state.snapshot(this.options)); }
-  resetOptions() { this.options = { ...DEFAULT_OPTIONS, folder: this.config?.DEFAULT_FOLDER ?? '' }; this.saveOptions(); }
+  resetOptions() { this.options = this.defaults; this.saveOptions(); }
   addPreset(name: string) {
     const p = { name, options: $state.snapshot(this.options) };
     this.presets = [...this.presets.filter((x) => x.name !== name), p];
     save(K.presets, this.presets);
   }
   removePreset(name: string) { this.presets = this.presets.filter((p) => p.name !== name); save(K.presets, this.presets); }
-  applyPreset(p: Preset) { this.options = { ...DEFAULT_OPTIONS, ...p.options }; this.saveOptions(); }
+  applyPreset(p: Preset) { this.options = { ...this.defaults, ...p.options }; this.saveOptions(); }
 
   notify(text: string, kind: 'info' | 'error' = 'info') {
     this.toast = { text, kind };
@@ -190,7 +197,7 @@ class AppState {
 
   /** Le corps envoyé à /add : en mode Simple, les réglages par défaut ; en Avancé, ceux du panneau. */
   payload(url: string, useOptions: boolean): Record<string, unknown> {
-    const o = useOptions ? this.options : { ...DEFAULT_OPTIONS, folder: this.config?.DEFAULT_FOLDER ?? '' };
+    const o = useOptions ? this.options : this.defaults;
     const body: Record<string, unknown> = {
       url, download_type: o.download_type, codec: o.codec, format: o.format, quality: o.quality,
       auto_start: true,
@@ -345,6 +352,10 @@ const HASH: Record<Exclude<Tab, 'mine'>, string> = { history: 'historique', term
 function tabFromHash(): Tab {
   const h = location.hash.slice(1);
   return (Object.entries(HASH).find(([, v]) => v === h)?.[0] as Tab) ?? 'mine';
+}
+
+function hasSaved(key: string): boolean {
+  try { return localStorage.getItem(key) != null; } catch { return false; }
 }
 
 const MINE_KEY = 'mine.claimed.v1';
