@@ -5,15 +5,12 @@ import { siteOf } from './labels';
 import { t } from './i18n.svelte';
 import { DESKTOP, desktopPost, desktopSocket } from './desktop';
 
-const K = { history: 'mine.history.v1', options: DESKTOP ? 'mine.options.desktop.v1' : 'mine.options.v1', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
+const K = { history: 'mine.history.v1', options: DESKTOP ? 'mine.options.desktop.v1' : 'mine.options.v2', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
 const HISTORY_MAX = 500;
 
-const MUSIC = { download_type: 'audio', codec: 'auto', format: 'mp3', quality: 'best' };
-const VIDEO = { download_type: 'video', codec: 'auto', format: 'any', quality: 'best' };
-
 export const DEFAULT_OPTIONS: Options = {
-  // L'app de bureau sert surtout à la musique : MP3, meilleure qualité, avec la pochette.
-  ...(DESKTOP ? MUSIC : VIDEO),
+  // Partout (web, démo, app de bureau) : MP3, meilleure qualité, avec la pochette.
+  download_type: 'audio', codec: 'auto', format: 'mp3', quality: 'best',
   folder: '',
   playlist: 'all', playlist_item_limit: 10, subtitle_language: 'fr', subtitle_mode: 'prefer_manual',
   audio_tags: 'with_cover', clip_start: '', clip_end: '', custom_name_prefix: '',
@@ -52,9 +49,9 @@ class AppState {
   turnstileToken = $state('');
   turnstileReset: (() => void) | null = null;
   get demo() { return this.config?.DEMO ?? null; }
-  /** Réglages par défaut : la démo publique démarre en MP3, comme l'app de bureau. */
+  /** Réglages par défaut, avec le dossier par défaut du serveur. */
   get defaults(): Options {
-    return { ...DEFAULT_OPTIONS, ...(this.demo ? MUSIC : {}), folder: this.config?.DEFAULT_FOLDER ?? '' };
+    return { ...DEFAULT_OPTIONS, folder: this.config?.DEFAULT_FOLDER ?? '' };
   }
   private socket: Socket | null = null;
   /** Liens lancés depuis ce navigateur : leur fichier y est envoyé automatiquement à la fin. */
@@ -127,8 +124,6 @@ class AppState {
     s.on('configuration', (raw: string) => {
       const c = parse<ServerConfig>(raw);
       this.config = c;
-      // Démo, et aucun réglage enregistré dans ce navigateur : on part sur le MP3.
-      if (c.DEMO && !hasSaved(K.options)) this.options = { ...this.options, ...MUSIC };
       if (!this.options.folder && c.DEFAULT_FOLDER) this.options.folder = c.DEFAULT_FOLDER;
     });
     s.on('custom_dirs', (raw: string) => {
@@ -352,10 +347,6 @@ const HASH: Record<Exclude<Tab, 'mine'>, string> = { history: 'historique', term
 function tabFromHash(): Tab {
   const h = location.hash.slice(1);
   return (Object.entries(HASH).find(([, v]) => v === h)?.[0] as Tab) ?? 'mine';
-}
-
-function hasSaved(key: string): boolean {
-  try { return localStorage.getItem(key) != null; } catch { return false; }
 }
 
 const MINE_KEY = 'mine.claimed.v1';
