@@ -21,6 +21,8 @@ from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from watchfiles import awatch
 
 import bg_tasks
+import dataclasses
+import demo
 import format_catalog
 from ytdl import DownloadQueueNotifier, DownloadQueue, Download
 from download_options import DownloadOptions
@@ -763,27 +765,90 @@ def _migrate_legacy_request(post: dict) -> dict:
     return post
 
 class Notifier(DownloadQueueNotifier):
+    # room=None broadcasts to every client; the demo gives each visitor a room
+    # of their own, so nobody sees another visitor's downloads.
+    def __init__(self, room=None):
+        self.room = room
+
     async def added(self, dl):
         log.info(f"Notifier: Download added - {dl.title}")
-        await sio.emit('added', serializer.encode(dl))
+        await sio.emit('added', serializer.encode(dl), to=self.room)
 
     async def updated(self, dl):
         log.debug(f"Notifier: Download updated - {dl.title}")
-        await sio.emit('updated', serializer.encode(dl))
+        await sio.emit('updated', serializer.encode(dl), to=self.room)
 
     async def completed(self, dl):
         log.info(f"Notifier: Download completed - {dl.title}")
-        await sio.emit('completed', serializer.encode(dl))
+        await sio.emit('completed', serializer.encode(dl), to=self.room)
 
     async def canceled(self, id):
         log.info(f"Notifier: Download canceled - {id}")
-        await sio.emit('canceled', serializer.encode(id))
+        await sio.emit('canceled', serializer.encode(id), to=self.room)
 
     async def cleared(self, id):
         log.info(f"Notifier: Download cleared - {id}")
-        await sio.emit('cleared', serializer.encode(id))
+        await sio.emit('cleared', serializer.encode(id), to=self.room)
 
 dqueue = DownloadQueue(config, Notifier())
+
+DEMO = demo.DemoSettings()
+demo_manager = demo.DemoManager(config, DEMO, DownloadQueue, Notifier) if DEMO.enabled else None
+
+
+async def _demo_startup(app):
+    log.warning(
+        'MODE DÉMO : une file par visiteur, %s téléchargements par heure, %s min max, Turnstile %s.',
+        DEMO.per_hour, DEMO.max_minutes, 'actif' if DEMO.turnstile_secret else 'INACTIF (DEMO_TURNSTILE_SECRET vide)')
+    demo_manager.wipe()
+    bg_tasks.create_task(demo_manager.janitor(), name='demo_janitor')
+
+
+async def _demo_cleanup(app):
+    demo_manager.close()
+
+
+if demo_manager is not None:
+    app.on_startup.append(_demo_startup)
+    app.on_cleanup.append(_demo_cleanup)
+
+
+def _demo_refusal(msg: str, status: int = 403, code: str = 'demo') -> web.Response:
+    return web.json_response({'status': 'error', 'msg': msg, 'code': code}, status=status)
+
+
+def _demo_token(request) -> str:
+    token = request.cookies.get(demo.COOKIE)
+    if not demo.valid_token(token):
+        raise web.HTTPForbidden(
+            text=serializer.encode({'status': 'error', 'code': 'demo_session',
+                                    'msg': 'Session expirée : recharge la page.'}),
+            content_type='application/json')
+    return token
+
+
+async def _queue_for(request):
+    """The queue a request acts on: the shared one, or the visitor's own in the demo."""
+    if demo_manager is None:
+        return dqueue
+    return (await demo_manager.visitor(_demo_token(request))).queue
+
+
+# Everything that would reach beyond a visitor's own downloads.
+_DEMO_BLOCKED = ('subscribe', 'subscriptions', 'upload-cookies', 'delete-cookies', 'browse',
+                 'download/', 'audio_download/')
+
+
+@web.middleware
+async def demo_guard(request, handler):
+    if demo_manager is not None:
+        rel = request.path[len(config.URL_PREFIX):] if request.path.startswith(config.URL_PREFIX) else request.path
+        if any(rel.startswith(b) if b.endswith('/') else (rel == b or rel.startswith(b + '/')) for b in _DEMO_BLOCKED):
+            return _demo_refusal("Pas disponible dans la démo. Installe Mine!? chez toi pour tout avoir.")
+    return await handler(request)
+
+
+app.middlewares.append(demo_guard)
 
 
 async def _download_queue_startup(app):
@@ -1098,7 +1163,38 @@ async def add(request):
         bool(options.folder),
         options.auto_start,
     )
+    if demo_manager is not None:
+        return await _demo_add(request, post, url, options)
     status = await dqueue.add(url, options)
+    return web.Response(text=serializer.encode(status))
+
+
+async def _demo_add(request, post, url, options, *, retry_id=None):
+    visitor = await demo_manager.visitor(_demo_token(request))
+    ip = demo.client_ip(request.headers, request.remote)
+    if visitor.adding:
+        return _demo_refusal("Un téléchargement à la fois dans la démo.", 429, 'demo_busy')
+    refusal = demo_manager.quota_refusal(visitor, ip)
+    if refusal:
+        return _demo_refusal(refusal, 429, 'demo_quota')
+    if demo_manager.needs_turnstile(visitor):
+        import aiohttp
+        if not await demo_manager.verify_turnstile(visitor, post.get('turnstile'), ip, aiohttp.ClientSession):
+            return _demo_refusal("Vérification anti-robot à refaire : patiente une seconde et réessaie.", 403, 'demo_turnstile')
+    visitor.adding = True
+    try:
+        if retry_id is not None:
+            status = await visitor.queue.retry(retry_id)
+        else:
+            # Rien de partagé : pas de dossier, pas de préréglage du serveur, départ immédiat.
+            options = dataclasses.replace(
+                options, folder=None, ytdl_options_presets=[], ytdl_options_overrides={},
+                auto_start=True, playlist_item_limit=1, split_by_chapters=False)
+            status = await visitor.queue.add(url, options)
+    finally:
+        visitor.adding = False
+    if isinstance(status, dict) and status.get('status') == 'ok':
+        demo_manager.count(visitor, ip)
     return web.Response(text=serializer.encode(status))
 
 
@@ -1140,7 +1236,7 @@ async def presets(request):
 
 @routes.post(config.URL_PREFIX + 'cancel-add')
 async def cancel_add(request):
-    dqueue.cancel_add()
+    (await _queue_for(request)).cancel_add()
     return web.Response(text=serializer.encode({'status': 'ok'}), content_type='application/json')
 
 
@@ -1151,6 +1247,8 @@ async def retry(request):
     # record only once it is confirmed re-queued. A batch form would have to
     # report per-id results for the caller to know which ones to remove.
     post = await _read_json_request(request)
+    if demo_manager is not None:
+        return await _demo_add(request, post, None, None, retry_id=_require_id(post))
     status = await dqueue.retry(_require_id(post))
     return web.Response(text=serializer.encode(status), content_type='application/json')
 
@@ -1279,7 +1377,8 @@ async def delete(request):
     delete_files = post.get('delete_files', False)
     if not isinstance(delete_files, bool):
         raise web.HTTPBadRequest(reason="'delete_files' must be a boolean")
-    status = await (dqueue.cancel(ids) if where == 'queue' else dqueue.clear(ids, delete_files=delete_files))
+    queue = await _queue_for(request)
+    status = await (queue.cancel(ids) if where == 'queue' else queue.clear(ids, delete_files=delete_files))
     log.info(f"Download delete request processed for ids: {ids}, where: {where}")
     return web.Response(text=serializer.encode(status))
 
@@ -1288,7 +1387,7 @@ async def start(request):
     post = await _read_json_request(request)
     ids = _require_id_list(post)
     log.info(f"Received request to start pending downloads for ids: {ids}")
-    status = await dqueue.start_pending(ids)
+    status = await (await _queue_for(request)).start_pending(ids)
     return web.Response(text=serializer.encode(status))
 
 
@@ -1381,6 +1480,8 @@ async def delete_cookies(request):
 
 @routes.get(config.URL_PREFIX + 'cookie-status')
 async def cookie_status(request):
+    if demo_manager is not None:
+        return web.Response(text=serializer.encode({'status': 'ok', 'has_cookies': False}))
     configured_cookiefile = config.YTDL_OPTIONS.get('cookiefile')
     has_configured_cookies = isinstance(configured_cookiefile, str) and os.path.exists(configured_cookiefile)
     has_uploaded_cookies = os.path.exists(COOKIES_PATH)
@@ -1394,11 +1495,12 @@ async def history(request):
     # Served from the in-memory queues (like the socket 'all' event) rather
     # than saved_items(), which reloads and re-compacts the on-disk state on
     # every call.
-    for _, v in dqueue.queue.items():
+    queue = await _queue_for(request)
+    for _, v in queue.queue.items():
         history['queue'].append(v.info)
-    for _, v in dqueue.done.items():
+    for _, v in queue.done.items():
         history['done'].append(v.info)
-    for _, v in dqueue.pending.items():
+    for _, v in queue.pending.items():
         history['pending'].append(v.info)
 
     log.info("Sending download history")
@@ -1435,6 +1537,18 @@ async def connect(sid, environ):
     # handshake -- ``_save_dict_async`` serializes on the loop for the same
     # reason. 'all' goes out first: the UI populates its state from it before
     # the finer-grained events that may follow.
+    if demo_manager is not None:
+        token = demo.token_from_cookie_header(environ.get('HTTP_COOKIE'))
+        if token:
+            await sio.enter_room(sid, token)
+        visitor = demo_manager.peek(token)
+        await sio.emit('all', serializer.encode(visitor.queue.get() if visitor else ([], [])), to=sid)
+        await sio.emit('subscriptions_all', serializer.encode([]), to=sid)
+        await sio.emit('formats', serializer.encode(format_catalog.public_catalog()), to=sid)
+        await sio.emit('configuration', serializer.encode(
+            {**config.frontend_safe(), 'CUSTOM_DIRS': False, 'CREATE_CUSTOM_DIRS': False,
+             'DEFAULT_FOLDER': '', 'SEND_TO_BROWSER': True, 'DEMO': DEMO.public()}), to=sid)
+        return
     await sio.emit('all', serializer.encode(dqueue.get()), to=sid)
     await sio.emit('subscriptions_all', serializer.encode([s.to_public_dict() for s in submgr.list_all()]), to=sid)
     await sio.emit('formats', serializer.encode(format_catalog.public_catalog()), to=sid)
@@ -1499,6 +1613,10 @@ async def index(request):
     response = web.FileResponse(os.path.join(config.BASE_DIR, 'ui/dist/index.html'))
     if 'mine_theme' not in request.cookies:
         response.set_cookie('mine_theme', config.DEFAULT_THEME)
+    if demo_manager is not None and not demo.valid_token(request.cookies.get(demo.COOKIE)):
+        secure = request.secure or request.headers.get('X-Forwarded-Proto') == 'https' or 'CF-Connecting-IP' in request.headers
+        response.set_cookie(demo.COOKIE, demo.new_token(), max_age=30 * 86400, httponly=True,
+                            samesite='Lax', secure=secure, path=config.URL_PREFIX or '/')
     return response
 
 @routes.get(config.URL_PREFIX + 'robots.txt')
@@ -1519,7 +1637,8 @@ async def take(request):
     entier : le serveur ne sert que d'étape de passage.
     """
     url = request.query.get('id', '')
-    path = dqueue.finished_file(url)
+    queue = await _queue_for(request)
+    path = queue.finished_file(url)
     if path is None:
         raise web.HTTPNotFound(reason='Fichier introuvable')
     name = os.path.basename(path)
@@ -1530,7 +1649,7 @@ async def take(request):
     await response.prepare(request)
     await response.write_eof()
     if config.SEND_TO_BROWSER and response.status == 200 and request.method == 'GET':
-        await dqueue.clear([url], delete_files=True)
+        await queue.clear([url], delete_files=True)
     return response
 
 _SITES_CACHE = None

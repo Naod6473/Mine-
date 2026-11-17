@@ -37,6 +37,13 @@ export interface TypeOption extends Option {
 }
 export interface Catalog { download_type: Choice<TypeOption> }
 
+export interface DemoConfig {
+  per_hour: number;
+  max_minutes: number;
+  turnstile_sitekey: string;
+  install_url: string;
+}
+
 export interface ServerConfig {
   CUSTOM_DIRS: boolean;
   CREATE_CUSTOM_DIRS: boolean;
@@ -45,6 +52,8 @@ export interface ServerConfig {
   SEND_TO_BROWSER?: boolean;
   PUBLIC_HOST_AUDIO_URL: string;
   DEFAULT_OPTION_PLAYLIST_ITEM_LIMIT?: number | string;
+  /** Présent seulement sur une instance de démo publique. */
+  DEMO?: DemoConfig;
   [k: string]: unknown;
 }
 

@@ -52,6 +52,11 @@ const fr = {
   tour3: "Je ne pique pas que sur YouTube : plus de mille sites. La liste complète est par ici, si t'as la journée.",
   tour4: "Et tout ce que t'as chipé reste là, dans ton navigateur, rien que pour toi. Allez, à toi. Enfin… à moi.",
   today: "Aujourd'hui, {n}", yesterday: 'Hier, {n}', left: 'reste {n}', back: 'Retour à Mine!?',
+  demoTitle: 'Démo publique',
+  demoLimits: '{n} téléchargements par heure, une vidéo à la fois, {m} minutes maximum, pas de playlist.',
+  demoHome: 'Ces limites ne valent que pour la démo : installée chez toi, Mine!? n’en a aucune.',
+  demoInstall: 'Installer Mine!? chez soi', demoCode: 'Le code sur GitHub',
+  demoBot: 'Vérification anti-robot en cours, réessaie dans une seconde.',
 };
 type Dict = typeof fr;
 
@@ -104,6 +109,11 @@ const en: Dict = {
   tour3: 'I don’t only steal from YouTube: over a thousand sites. The full list is down here, if you’ve got all day.',
   tour4: 'And everything you grabbed stays here, in your browser, just for you. Off you go. I mean… mine.',
   today: 'Today, {n}', yesterday: 'Yesterday, {n}', left: '{n} left', back: 'Back to Mine!?',
+  demoTitle: 'Public demo',
+  demoLimits: '{n} downloads per hour, one video at a time, {m} minutes max, no playlists.',
+  demoHome: 'These limits only apply to the demo: installed at home, Mine!? has none.',
+  demoInstall: 'Install Mine!? at home', demoCode: 'The code on GitHub',
+  demoBot: 'Bot check in progress, try again in a second.',
 };
 
 const DICTS: Record<Lang, Dict> = { fr, en };
@@ -135,7 +145,9 @@ class I18n {
 export const i18n = new I18n();
 
 /** Texte traduit ; `{n}` est remplacé par la valeur donnée. */
-export function t(key: keyof Dict, n?: string | number): string {
-  const s = DICTS[i18n.lang][key];
-  return n == null ? s : s.replace('{n}', String(n));
+export function t(key: keyof Dict, n?: string | number, m?: string | number): string {
+  let s = DICTS[i18n.lang][key];
+  if (n != null) s = s.replace('{n}', String(n));
+  if (m != null) s = s.replace('{m}', String(m));
+  return s;
 }

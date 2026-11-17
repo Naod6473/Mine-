@@ -1,0 +1,28 @@
+# Mine!? en démo publique (par exemple derrière Cloudflare Tunnel).
+# À lancer À CÔTÉ de ton instance perso, qui ne change pas :
+#   docker compose -f compose.demo.yaml up -d
+# Chaque visiteur ne voit que ses propres téléchargements ; pas d'abonnements,
+# de cookies, de playlists ni de dossiers. Les limites ne valent que pour la démo.
+services:
+  mine-demo:
+    image: ${MINE_IMAGE:-ghcr.io/naod6473/mine:latest}
+    container_name: mine-demo
+    restart: unless-stopped
+    ports:
+      # Seulement en local : cloudflared, installé sur la même machine, s'y connecte.
+      - "127.0.0.1:8082:8081"
+    volumes:
+      - mine-demo:/downloads
+    environment:
+      TZ: "Europe/Paris"
+      DEMO_MODE: "true"
+      DEMO_DOWNLOADS_PER_HOUR: "5"
+      DEMO_MAX_DURATION_MINUTES: "15"
+      # Clés Turnstile (dash.cloudflare.com > Turnstile). Vides : pas de vérification anti-robot.
+      DEMO_TURNSTILE_SITEKEY: "${DEMO_TURNSTILE_SITEKEY:-}"
+      DEMO_TURNSTILE_SECRET: "${DEMO_TURNSTILE_SECRET:-}"
+      # Téléchargements simultanés, tous visiteurs confondus.
+      MAX_CONCURRENT_DOWNLOADS: "2"
+      YTDL_NIGHTLY_UPDATE_TIME: "04:00"
+volumes:
+  mine-demo: {}
