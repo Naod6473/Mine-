@@ -12,7 +12,7 @@
 <article class="legal">
   {#if page === 'terms' && fr}
     <h1>Conditions d'utilisation</h1>
-    <p class="date">Dernière mise à jour : 15 novembre 2026</p>
+    <p class="date">Dernière mise à jour : 19 novembre 2026</p>
 
     <h2>1. Ce qu'est Mine!?</h2>
     <p>Mine!? est un logiciel libre qui récupère des vidéos, de la musique, des sous-titres ou des miniatures à partir d'un lien, puis envoie le fichier obtenu à ton navigateur. Chaque instance est installée et gérée par une personne ou un foyer, appelé ici « l'administrateur ». Il n'existe pas de service central : l'instance que tu utilises appartient à celui qui l'a installée.</p>
@@ -49,7 +49,7 @@
     <p>Ces conditions sont soumises au droit français, sous réserve des dispositions impératives du pays où tu résides.</p>
   {:else if page === 'terms'}
     <h1>Terms of use</h1>
-    <p class="date">Last updated: 15 November 2026</p>
+    <p class="date">Last updated: 19 November 2026</p>
 
     <h2>1. What Mine!? is</h2>
     <p>Mine!? is free software that fetches videos, music, subtitles or thumbnails from a link, then sends the resulting file to your browser. Each instance is installed and run by a person or a household, called “the administrator” here. There is no central service: the instance you are using belongs to whoever installed it.</p>
@@ -86,7 +86,7 @@
     <p>These terms are governed by French law, subject to the mandatory provisions of the country where you live.</p>
   {:else if fr}
     <h1>Confidentialité</h1>
-    <p class="date">Dernière mise à jour : 15 novembre 2026</p>
+    <p class="date">Dernière mise à jour : 19 novembre 2026</p>
 
     <p class="lead">En bref : pas de compte, pas de publicité, pas de mesure d'audience. Ton historique reste dans ton navigateur, et les fichiers sont effacés du serveur dès qu'ils te sont envoyés.</p>
 
@@ -126,7 +126,7 @@
     <p>Cette page peut évoluer avec l'application. La date en haut indique la dernière version.</p>
   {:else}
     <h1>Privacy</h1>
-    <p class="date">Last updated: 15 November 2026</p>
+    <p class="date">Last updated: 19 November 2026</p>
 
     <p class="lead">In short: no account, no ads, no analytics. Your history stays in your browser, and files are deleted from the server as soon as they are sent to you.</p>
 

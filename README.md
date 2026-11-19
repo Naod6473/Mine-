@@ -4,7 +4,9 @@
 
 <p align="center">Tu colles un lien, tu appuies sur <b>Mine !</b>, et le fichier arrive dans ton navigateur.</p>
 
-<p align="center"><a href="https://naod6473.github.io/Mine-/">Page de présentation</a></p>
+<p align="center"><a href="https://naod6473.github.io/Mine-/">Page de présentation</a> · <a href="https://apphero.cloud/02">App 02/30 du défi Apphéro</a></p>
+
+<p align="center"><a href="docs/presentation.mp4"><img src="docs/presentation.jpg" width="720" alt="Vidéo de présentation de Mine!? (17 s), clique pour la lire"></a><br><sub>▶ La vidéo de présentation (17 s)</sub></p>
 
 <p align="center">
   <picture>
