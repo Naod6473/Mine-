@@ -4,6 +4,7 @@ import { load, save } from './storage';
 import { siteOf } from './labels';
 import { t } from './i18n.svelte';
 import { DESKTOP, desktopPost, desktopSocket } from './desktop';
+import { SHOWCASE, showcasePost, showcaseSocket, fakeDeliver } from './showcase';
 
 const K = { history: 'mine.history.v1', options: DESKTOP ? 'mine.options.desktop.v1' : 'mine.options.v2', mode: 'mine.mode.v1', presets: 'mine.presets.v1', hidden: 'mine.hidden.v1' };
 const HISTORY_MAX = 500;
@@ -45,6 +46,7 @@ class AppState {
   /** Version de bureau : où en sont yt-dlp, ffmpeg et deno. */
   tools = $state<{ ready: boolean; stage: string; percent: number | null; error: string | null }>({ ready: !DESKTOP, stage: '', percent: null, error: null });
   readonly desktop = DESKTOP;
+  readonly showcase = SHOWCASE;
   /** Démo publique : jeton Turnstile du moment (usage unique) et de quoi en demander un autre. */
   turnstileToken = $state('');
   turnstileReset: (() => void) | null = null;
@@ -75,7 +77,7 @@ class AppState {
   });
 
   connect() {
-    const s = DESKTOP ? (desktopSocket() as unknown as Socket) : this.socketIo();
+    const s = DESKTOP ? (desktopSocket() as unknown as Socket) : SHOWCASE ? (showcaseSocket() as unknown as Socket) : this.socketIo();
     s.on('tools', (raw: string) => { if (raw) this.tools = JSON.parse(raw); });
     s.on('connect', () => { this.connected = true; this.everConnected = true; });
     s.on('disconnect', () => { this.connected = false; });
@@ -304,6 +306,7 @@ class AppState {
 
   /** Demande une fois, au premier clic sur « Mine ! », le droit de prévenir quand c'est fini. */
   private askNotifications() {
+    if (SHOWCASE) return;
     if ('Notification' in window && Notification.permission === 'default') {
       try { void Notification.requestPermission().catch(() => {}); } catch {}
     }
@@ -317,6 +320,7 @@ class AppState {
 
   /** Déclenche le téléchargement du fichier dans le navigateur. */
   deliver(d: Download) {
+    if (SHOWCASE) { if (d.filename) fakeDeliver(d.filename, d.size ?? null); return; }
     const href = this.takeUrl(d);
     if (!href) return;
     const a = document.createElement('a');
@@ -329,6 +333,7 @@ class AppState {
   }
 
   takeUrl(d: { url: string; filename?: string | null }): string | null {
+    if (SHOWCASE) return null;
     return d.filename ? `take?id=${encodeURIComponent(d.url)}` : null;
   }
 
@@ -361,6 +366,7 @@ function hiddenKey(key: string, d: Download) { return `${key}#${d.timestamp}`; }
 
 async function post(path: string, body: unknown): Promise<{ status?: string; msg?: string; code?: string }> {
   if (DESKTOP) return desktopPost(path, body);
+  if (SHOWCASE) return showcasePost(path, body);
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const text = await r.text();
   if (!r.ok) {

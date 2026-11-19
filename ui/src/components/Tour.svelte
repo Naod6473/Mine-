@@ -24,7 +24,7 @@
     if (!app.everConnected) return;
     let seen = true;
     try { seen = !!localStorage.getItem(KEY); } catch {}
-    if (!seen) app.tour = true;
+    if (!seen && !app.showcase) app.tour = true;
   });
 
   $effect(() => {

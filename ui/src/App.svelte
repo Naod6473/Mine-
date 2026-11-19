@@ -13,6 +13,8 @@
   import { theme } from './lib/theme.svelte';
   import ToolsSetup from './components/ToolsSetup.svelte';
   import DemoBanner from './components/DemoBanner.svelte';
+  import ShowcaseBanner from './components/ShowcaseBanner.svelte';
+  import FakeDownload from './components/FakeDownload.svelte';
   import { externalLinks } from './lib/desktop';
 
   const SOURCE_URL = 'https://github.com/Naod6473/Mine-';
@@ -31,7 +33,7 @@
   onMount(() => {
     app.connect();
     if (app.desktop) externalLinks();
-    else fetch('version').then((r) => r.json()).then((v) => (serverVersion = v.version ?? '')).catch(() => {});
+    else if (!app.showcase) fetch('version').then((r) => r.json()).then((v) => (serverVersion = v.version ?? '')).catch(() => {});
   });
 
   function tidy() {
@@ -77,7 +79,7 @@
     <section class="hero">
       <Sky />
       <MineBar initialUrl={shared} {autostart} />
-      <DemoBanner />
+      {#if app.showcase}<ShowcaseBanner />{:else}<DemoBanner />{/if}
     </section>
 
     {#if app.cards.length}
@@ -116,6 +118,7 @@
 </footer>
 
 <Tour />
+{#if app.showcase}<FakeDownload />{/if}
 {#if app.desktop && !app.tools.ready}<ToolsSetup />{/if}
 
 {#if app.toast}

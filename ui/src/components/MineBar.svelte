@@ -25,6 +25,27 @@
     if (autostart && !started && app.connected && app.config && valid) { started = true; submit(); }
   });
 
+  // Vitrine : le lien d'exemple s'écrit tout seul dans le champ, lettre par lettre.
+  let typing = 0;
+  function typeLink(link: string) {
+    const run = ++typing;
+    url = '';
+    input?.focus();
+    let i = 0;
+    const step = () => {
+      if (run !== typing) return;
+      url = link.slice(0, ++i);
+      if (i < link.length) setTimeout(step, 28 + Math.random() * 40);
+    };
+    step();
+  }
+  $effect(() => {
+    if (!app.showcase) return;
+    const h = (e: Event) => typeLink((e as CustomEvent<string>).detail);
+    addEventListener('mine-type', h);
+    return () => removeEventListener('mine-type', h);
+  });
+
   /** Un lien glissé sur la page part tout de suite ; un lien collé hors du champ le remplit. */
   let dragging = $state(false);
   function linkFrom(dt: DataTransfer | null): string {
